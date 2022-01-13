@@ -136,14 +136,7 @@ state_real_arr = get_stateReal_arr(_m_df, _y_df, _f_df, _fadj_df)
 target_arr = get_target_arr(_m_df, _y_df, _f_df, _fadj_df)
 # condition_arr = get_condition_arr(_m_df, _y_df, _f_df, _fadj_df)
 state_arr =  np.concatenate([state_real_arr, state_bool_arr], axis=1)
-state_arr.shape
-target_arr[1000]
-state_arr[1000]
-target_arr.shape
-target_arr.shape
-plt.plot(target_arr[0:20, 0])
-plt.plot(target_arr[0:20, 2])
-plt.plot(target_arr[0:20, 1])
+
  # %%
 state_col = ['episode_id', 'vel', 'pc', 'act_long','act_lat',
                                      'vel', 'dx', 'act_long', 'act_lat',
@@ -171,18 +164,16 @@ for item in m_col:
 #%%
 all_episodes = spec['episode_id'].values
 len(all_episodes)
-# test_episodes = spec.loc[(spec['frm_n']>40) &
-#                         (spec['frm_n']<50) &
-#                         (spec['f_id']>0) &
-#                         (spec['fadj_id']>0)]['episode_id'].sample(1, replace=False).values
+test_episodes = spec.loc[(spec['frm_n']>40) &
+                        (spec['frm_n']<50) &
+                        (spec['f_id']>0) &
+                        (spec['fadj_id']>0)]['episode_id'].sample(1, replace=False).values
 
-test_episodes = np.array([1, 2, 3])
 validation_n = int(0.08*len(all_episodes))-int(len(test_episodes))
-validation_n = 5
 validation_episodes = spec[~spec['episode_id'].isin(test_episodes)]['episode_id'].sample(  \
                                     validation_n, replace=False).values
 validation_episodes = np.append(validation_episodes, test_episodes)
-# validation_episodes = np.append(validation_episodes, [2895, 1289, 1037, 2870, 2400, 1344, 2872, 2266, 2765, 2215])
+validation_episodes = np.append(validation_episodes, [2895, 1289, 1037, 2870, 2400, 1344, 2872, 2266, 2765, 2215])
 training_episodes = np.setdiff1d(all_episodes, validation_episodes)
 len(validation_episodes)/len(training_episodes)
 

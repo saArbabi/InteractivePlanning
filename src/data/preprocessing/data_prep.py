@@ -155,12 +155,12 @@ class DataPrep():
 
         if episode_type == 'training_episodes':
             for episode_id in training_episodes:
-                print(f'prepping {episode_type} - episode: {episode_id}')
+                # print(f'prepping {episode_type} - episode: {episode_id}')
                 self.episode_prep(episode_id)
 
         elif episode_type == 'validation_episodes':
             for episode_id in validation_episodes:
-                print(f'prepping {episode_type} - episode: {episode_id}')
+                # print(f'prepping {episode_type} - episode: {episode_id}')
                 self.episode_prep(episode_id)
 
         self.pickler(episode_type)
