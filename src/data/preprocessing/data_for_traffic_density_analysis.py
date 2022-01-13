@@ -6,10 +6,10 @@ import matplotlib.pyplot as plt
 # %%
 spec_col = ['episode_id', 'scenario', 'lc_frm', 'm_id', 'y_id', 'fadj_id', 'f_id',
        'frm_n']
-validation_episodes = np.loadtxt('./datasets/validation_episodes.csv', delimiter=',')
-all_state_arr = np.loadtxt('./datasets/states_arr.csv', delimiter=',')
-all_target_arr = np.loadtxt('./datasets/targets_arr.csv', delimiter=',')
-spec = pd.read_csv('./datasets/episode_spec.txt', delimiter=' ',
+validation_episodes = np.loadtxt('./src/datasets/validation_episodes.csv', delimiter=',')
+all_state_arr = np.loadtxt('./src/datasets/states_arr.csv', delimiter=',')
+all_target_arr = np.loadtxt('./src/datasets/targets_arr.csv', delimiter=',')
+spec = pd.read_csv('./src/datasets/episode_spec.txt', delimiter=' ',
                                                         header=None, names=spec_col)
 
 validation_set = all_state_arr[np.isin(all_state_arr[:, 0], validation_episodes)]
@@ -37,7 +37,7 @@ def pickup_episodes(validation_set, min_speed, max_speed, episode_n):
     return np.random.choice(episodes, episode_n, replace=False)
 
 def data_saver(data, data_name):
-    file_name = './datasets/' + data_name + '.csv'
+    file_name = './src/datasets/' + data_name + '.csv'
     if data.dtype == 'int64':
         np.savetxt(file_name, data, fmt='%i', delimiter=',')
     else:
@@ -62,29 +62,29 @@ data_saver(low_density_episodes, 'low_density_test_episodes')
 data_saver(high_density_episodes, 'high_density_test_episodes')
 
 # %%
-file_name = './datasets/' + 'high_density_states_test'
+file_name = './src/datasets/' + 'high_density_states_test'
 with open(file_name, "wb") as f:
     _arr = all_state_arr[np.isin(all_state_arr[:, 0], high_density_episodes)]
     pickle.dump(_arr, f)
-file_name = './datasets/' + 'high_density_targets_test'
+file_name = './src/datasets/' + 'high_density_targets_test'
 with open(file_name, "wb") as f:
     _arr = all_target_arr[np.isin(all_target_arr[:, 0], high_density_episodes)]
     pickle.dump(_arr, f)
 
-file_name = './datasets/' + 'medium_density_states_test'
+file_name = './src/datasets/' + 'medium_density_states_test'
 with open(file_name, "wb") as f:
     _arr = all_state_arr[np.isin(all_state_arr[:, 0], medium_density_episodes)]
     pickle.dump(_arr, f)
-file_name = './datasets/' + 'medium_density_targets_test'
+file_name = './src/datasets/' + 'medium_density_targets_test'
 with open(file_name, "wb") as f:
     _arr = all_target_arr[np.isin(all_target_arr[:, 0], medium_density_episodes)]
     pickle.dump(_arr, f)
 
-file_name = './datasets/' + 'low_density_states_test'
+file_name = './src/datasets/' + 'low_density_states_test'
 with open(file_name, "wb") as f:
     _arr = all_state_arr[np.isin(all_state_arr[:, 0], low_density_episodes)]
     pickle.dump(_arr, f)
-file_name = './datasets/' + 'low_density_targets_test'
+file_name = './src/datasets/' + 'low_density_targets_test'
 with open(file_name, "wb") as f:
     _arr = all_target_arr[np.isin(all_target_arr[:, 0], low_density_episodes)]
     pickle.dump(_arr, f)

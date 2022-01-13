@@ -2,13 +2,13 @@
 import os
 import json
 from datetime import datetime
-from models.core.preprocessing.data_prep import DataPrep
+from src.data.preprocessing.data_prep import DataPrep
 import pickle
 import matplotlib.pyplot as plt
 
 # %%
 class DataObj():
-    dirName = './datasets/preprocessed/'
+    dirName = './src/datasets/preprocessed/'
 
     def __init__(self, config):
         self.config = config

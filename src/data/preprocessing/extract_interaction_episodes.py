@@ -3,7 +3,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import sys
 import os
-from models.core.preprocessing import utils
+from src.data.preprocessing import utils
 from math import hypot
 import json
 from importlib import reload
@@ -39,11 +39,10 @@ datasets = {
 col_df_all = ['id','frm','scenario','lane_id','length','x_front','y_front','class']
 
 # %%
-feature_set['fr_long'].mean()
-feature_set = pd.read_csv('./datasets/feature_set.txt', delimiter=' ',
+feature_set = pd.read_csv('./src/datasets/feature_set.txt', delimiter=' ',
                         header=None, names=col).drop(col_drop,axis=1)
 
-df_all = pd.read_csv('./datasets/df_all.txt', delimiter=' ',
+df_all = pd.read_csv('./src/datasets/df_all.txt', delimiter=' ',
                                                             header=None, names=col_df_all)
 
 os.chdir('../NGSIM_data_and_visualisations')
@@ -115,7 +114,7 @@ episode_spec = {}
 for scenario in datasets:
     feat_df = feature_set.loc[(feature_set['scenario'] == scenario) &
                                         (feature_set['lane_id'] < 7)] # feat_set_scene
-    ids = feat_df['id'].unique().astype('int')
+    ids = feat_df['id'].unique().astype('int')[0:50]
 
     for id in ids:
         mveh_df = feat_df.loc[(feat_df['id'] == id)].reset_index(drop = True)
@@ -138,7 +137,6 @@ for scenario in datasets:
 
                     if m_class == 2 and frms_n > 20 and \
                                         start_frm != 0 and end_frm != 0 and v_min > 0:
-
                         try:
                             y_id, _ = utils.get_vehInfo(mveh_df, lc_frm, 'bb_id')
                             fadj_id, _ = utils.get_vehInfo(mveh_df, lc_frm, 'ff_id')
@@ -208,7 +206,7 @@ for scenario in datasets:
                             print('This episode has a vehicle with missing frame - episode is ignored')
                             continue
 
-pd.DataFrame.from_dict(episode_spec, orient='index').to_csv('./datasets/episode_spec.txt',
+pd.DataFrame.from_dict(episode_spec, orient='index').to_csv('./src/datasets/episode_spec.txt',
                                 header=None, index=None, sep=' ', mode='a')
 
 # %%
@@ -308,6 +306,15 @@ for lane_change in lc_frms:
                 draw_traj(m_df, y_df, case_info)
 
 
+
+
+# %%
+plt.plot(m_df['act_long'])
+plt.plot(y_df['act_long'])
+plt.plot(m_df['act_lat'])
+plt.plot(f_df['act_lat'])
+plt.plot(fadj_df['act_lat'])
+plt.plot(m_df['pc'])
 # %%
 episode_spec[2]
 case_info

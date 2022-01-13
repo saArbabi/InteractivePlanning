@@ -6,6 +6,7 @@ Here is a brief description of the path from raw NGSIM data to model.
 - These data files are then trimmed and saved as states_arr and targets_arr by
 data_preliminaries.py to be further processed/sequenced prior to training by
 data_prep.py
+- 
 (1)
 (1)
 (1)

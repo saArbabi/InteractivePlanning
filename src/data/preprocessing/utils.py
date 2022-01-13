@@ -1,5 +1,8 @@
 import pandas as pd
 import numpy as np
+from pathlib import Path
+import os
+
 def get_pc(p, Ex, Ey):
     """ a car's distance from the shadow point of target lane (lane the merging car
     merges into)
@@ -141,7 +144,7 @@ def get_globPos(glob_pos, vehicle_id):
 
 def get_m_features(m_df, case_info):
     get_act_long(m_df)
-    get_past_action(m_df, 'mveh')
+    get_past_action(m_df)
     m_df.loc[:, ['episode_id', 'lc_type']] = [case_info['episode_id'], case_info['lc_type']]
     col = ['episode_id', 'id', 'frm', 'vel', 'pc', 'lc_type',
                                         'act_long_p', 'act_lat_p', 'act_long', 'act_lat']
@@ -157,21 +160,23 @@ def applyCorrections(m_df, veh_df, mveh_size):
     return remove_redundants(veh_df)
 
 def remove_redundants(veh_df):
-    return veh_df[['episode_id','frm', 'exists', 'vel', 'dx', 'act_long_p', 'act_long']]
+    to_keep = ['episode_id', 'id', 'frm', 'exists', 'vel', 'dx',
+                                        'act_long_p', 'act_lat_p', 'act_long', 'act_lat']
+    return veh_df[to_keep]
 
 def get_o_df(o_df, veh_id, episode_id):
     veh_df = o_df.loc[o_df['id'] == veh_id].reset_index(drop = True)
     get_act_long(veh_df)
-    get_past_action(veh_df, 'o')
+    get_past_action(veh_df)
     veh_df['episode_id'] = episode_id
     return veh_df
 
 def get_dummyVals(episode_id, df_size):
-    """
-    Note: dummy values are dataset averages. This is done avoid distorting normalization
-    """
-    dummy_df = pd.DataFrame(np.repeat([[episode_id, 0, 0, 7.5, 18, 0, 0]], df_size, axis=0),
-            columns=['episode_id', 'frm', 'exists', 'vel', 'dx', 'act_long_p', 'act_long'])
+    to_keep = ['episode_id', 'id', 'frm', 'exists', 'vel', 'dx',
+                                        'act_long_p', 'act_lat_p', 'act_long', 'act_lat']
+
+    dummy_df = pd.DataFrame(np.repeat([[episode_id]+[np.nan]*len(to_keep[1:])], df_size, axis=0),
+            columns=to_keep)
 
     return dummy_df
 
@@ -231,12 +236,16 @@ def frmTrim(veh_df, frm_max, frm_min):
 def get_veh_df(veh_df, veh_id, episode_id):
     veh_df = veh_df.loc[veh_df['id'] == veh_id].reset_index(drop = True)
     get_act_long(veh_df)
-    get_past_action(veh_df, 'o')
+    get_past_action(veh_df)
     veh_df['episode_id'] = episode_id
     return veh_df
 
 def data_saver(veh_df, o_name):
-    file_name = './datasets/' + o_name + '.txt'
+    file_name = './src/datasets/' + o_name + '.txt'
+    my_file = Path(file_name)
+    if not my_file.is_file():
+        with open(file_name, 'a'):
+            os.utime(file_name, None)
     veh_df.to_csv(file_name, header=None, index=None, sep=' ', mode='a')
 
 def get_act_long(veh_df):
@@ -244,14 +253,11 @@ def get_act_long(veh_df):
     veh_df.drop(veh_df.index[-1],  inplace=True)
     veh_df.loc[:,'act_long'] = acc
 
-def get_past_action(veh_df, name):
-    if name ==  'mveh':
-        action_names = ['act_long', 'act_lat']
-    else:
-        action_names = ['act_long']
+def get_past_action(veh_df):
+    action_names = ['act_long', 'act_lat']
+    action_names_p = ['act_long_p', 'act_lat_p']
 
     action_p = veh_df[action_names].iloc[:-1].values
-    action_names_p = [name +'_p' for name in action_names]
     veh_df.drop(veh_df.index[0],  inplace=True)
     veh_df.reset_index(drop=True,  inplace=True)
     veh_df[action_names_p] = pd.DataFrame(action_p)

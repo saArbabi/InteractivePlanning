@@ -16,12 +16,12 @@ def read_data():
     global all_state_arr, all_target_arr
     global training_episodes, validation_episodes, test_episodes
 
-    all_state_arr = np.loadtxt('./datasets/states_arr.csv', delimiter=',')
-    all_target_arr = np.loadtxt('./datasets/targets_arr.csv', delimiter=',')
+    all_state_arr = np.loadtxt('./src/datasets/states_arr.csv', delimiter=',')
+    all_target_arr = np.loadtxt('./src/datasets/targets_arr.csv', delimiter=',')
 
-    training_episodes = np.loadtxt('./datasets/training_episodes.csv', delimiter=',')
-    validation_episodes = np.loadtxt('./datasets/validation_episodes.csv', delimiter=',')
-    test_episodes = np.loadtxt('./datasets/test_episodes.csv', delimiter=',')
+    training_episodes = np.loadtxt('./src/datasets/training_episodes.csv', delimiter=',')
+    validation_episodes = np.loadtxt('./src/datasets/validation_episodes.csv', delimiter=',')
+    test_episodes = np.loadtxt('./src/datasets/test_episodes.csv', delimiter=',')
 
 
 read_data()
@@ -39,7 +39,7 @@ class DataPrep():
         self.setScalers() # will set the scaler attributes
 
     def obsSequence(self, state_arr, target_arr):
-        actions = [target_arr[:, n:n+1] for n in range(5)]
+        actions = [target_arr[:, n:n+1] for n in range(8)]
         traj_len = len(state_arr)
 
         if traj_len > 20:
@@ -55,12 +55,12 @@ class DataPrep():
 
                     seq_len = len(indx)-1
                     if seq_len not in self.targs:
-                        self.targs[seq_len] = [[],[],[],[],[]]
-                        self.conds[seq_len] = [[],[],[],[],[]]
+                        self.targs[seq_len] = [[] for n in range(8)]
+                        self.conds[seq_len] = [[] for n in range(8)]
                         self.states[seq_len] = []
 
                     self.states[seq_len].append(np.array(prev_states))
-                    for n in range(5):
+                    for n in range(8):
                         # jerk = actions[n][indx[1:]]-actions[n][indx[:-1]]
                         self.targs[seq_len][n].append(actions[n][indx[1:]])
                         self.conds[seq_len][n].append(actions[n][indx[:-1]])
@@ -86,8 +86,8 @@ class DataPrep():
         :Return: x, y arrays for model training.
         """
         state_arr, target_arr = self.get_episode_arr(episode_id)
-        state_arr = self.applyStateScaler(state_arr)
-        target_arr = self.applyActionScaler(target_arr)
+        # state_arr = self.applyStateScaler(state_arr)
+        # target_arr = self.applyActionScaler(target_arr)
         self.obsSequence(state_arr, target_arr)
 
     def shuffle(self, data_dict, type):
@@ -95,7 +95,7 @@ class DataPrep():
             if type=='targs':
                 # targets and conditionals
                 data_dict[seq_n] = [np.array(shuffle(data_dict[seq_n][n], \
-                                            random_state=2020)) for n in range(5)]
+                                            random_state=2020)) for n in range(8)]
             elif type=='states':
                 # states
                 data_dict[seq_n] = np.array(shuffle(data_dict[seq_n], random_state=2020))
@@ -155,10 +155,12 @@ class DataPrep():
 
         if episode_type == 'training_episodes':
             for episode_id in training_episodes:
+                print(f'prepping {episode_type} - episode: {episode_id}')
                 self.episode_prep(episode_id)
 
         elif episode_type == 'validation_episodes':
             for episode_id in validation_episodes:
+                print(f'prepping {episode_type} - episode: {episode_id}')
                 self.episode_prep(episode_id)
 
         self.pickler(episode_type)
