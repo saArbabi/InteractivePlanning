@@ -39,7 +39,7 @@ class DataPrep():
         self.setScalers() # will set the scaler attributes
 
     def obsSequence(self, state_arr, target_arr):
-        actions = [target_arr[:, n:n+1] for n in range(8)]
+        actions = [target_arr[:, n:n+2] for n in range(4)]
         traj_len = len(state_arr)
 
         if traj_len > 20:
@@ -55,12 +55,12 @@ class DataPrep():
 
                     seq_len = len(indx)-1
                     if seq_len not in self.targs:
-                        self.targs[seq_len] = [[] for n in range(8)]
-                        self.conds[seq_len] = [[] for n in range(8)]
+                        self.targs[seq_len] = [[] for n in range(4)]
+                        self.conds[seq_len] = [[] for n in range(4)]
                         self.states[seq_len] = []
 
                     self.states[seq_len].append(np.array(prev_states))
-                    for n in range(8):
+                    for n in range(4):
                         # jerk = actions[n][indx[1:]]-actions[n][indx[:-1]]
                         self.targs[seq_len][n].append(actions[n][indx[1:]])
                         self.conds[seq_len][n].append(actions[n][indx[:-1]])
@@ -95,7 +95,7 @@ class DataPrep():
             if type=='targs':
                 # targets and conditionals
                 data_dict[seq_n] = [np.array(shuffle(data_dict[seq_n][n], \
-                                            random_state=2020)) for n in range(8)]
+                                            random_state=2020)) for n in range(4)]
             elif type=='states':
                 # states
                 data_dict[seq_n] = np.array(shuffle(data_dict[seq_n], random_state=2020))

@@ -114,7 +114,7 @@ episode_spec = {}
 for scenario in datasets:
     feat_df = feature_set.loc[(feature_set['scenario'] == scenario) &
                                         (feature_set['lane_id'] < 7)] # feat_set_scene
-    ids = feat_df['id'].unique().astype('int')[0:50]
+    ids = feat_df['id'].unique().astype('int') 
 
     for id in ids:
         mveh_df = feat_df.loc[(feat_df['id'] == id)].reset_index(drop = True)

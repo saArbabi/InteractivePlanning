@@ -20,8 +20,8 @@ config = {
 },
 "data_config": {"obs_n": 20,
                 "pred_step_n": 10,
-                "step_size": 5,
-                "Note": "lat/lxo4nzxg 5cmotl4xdion xnot4c conss4idered joincltelyds"
+                "step_size": 3,
+                "Note": ""
                 # "Note": "jerk as target"
 },
 "exp_id": "NA",
@@ -32,12 +32,12 @@ states_train, targets_train, conditions_train, \
                             states_val, targets_val, conditions_val = data_objs
 
 # %%
-
+sum([2, 3])
 # %%
-
-plt.plot(states_train[10][15, :, 2], color='black')
-plt.plot(range(19, 29), targets_train[10][0][15, :, 0], color='red')
-plt.plot(range(19, 29), conditions_train[10][0][15, :, 0], color='red')
+conditions_train[10][0].shape
+plt.plot(states_train[10][15, :, 3], color='black')
+plt.plot(range(19, 29), targets_train[10][0][15, :, 1], color='red')
+plt.plot(range(19, 29), conditions_train[10][0][15, :, 1], color='red')
 
 # %%
 size = 0
