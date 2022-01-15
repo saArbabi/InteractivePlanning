@@ -22,10 +22,8 @@ fadj_df = pd.read_csv('./src/datasets/fadj_df.txt', delimiter=' ',
 spec = pd.read_csv('./src/datasets/episode_spec.txt', delimiter=' ',
                                                         header=None, names=spec_col)
 
-m_df['act_long'].quantile(0.995)
-m_df['act_lat'].quantile(0.995)
 
-
+plt.plot(m_df[m_df['episode_id'] == 967]['act_long'].values)
 # %%
 
 # %%
@@ -39,7 +37,8 @@ def trimStatevals(_df, names):
             df.loc[df['dx']>70, 'dx'] = 70
 
         else:
-            min, max = df[name].quantile([0.005, 0.995])
+            max_quantile = 0.9999
+            min, max = df[name].quantile([1-max_quantile, max_quantile])
             df.loc[df[name]<min, name] = min
             df.loc[df[name]>max, name] = max
 
@@ -122,14 +121,20 @@ def replace_nans_with_avg(df):
     return df
 
 # %%
-f_df = replace_nans_with_avg(f_df)
-fadj_df = replace_nans_with_avg(fadj_df)
-y_df = replace_nans_with_avg(y_df)
+o_trim_col = ['dx', 'act_long', 'act_lat', 'act_long_p', 'act_lat_p']
+m_trim_col = ['act_long', 'act_lat', 'act_long_p', 'act_lat_p']
 
+
+_m_df = trimStatevals(m_df, m_trim_col)
+_y_df = trimStatevals(y_df, o_trim_col)
 _f_df = trimStatevals(f_df, o_trim_col)
 _fadj_df = trimStatevals(fadj_df, o_trim_col)
-_y_df = trimStatevals(y_df, o_trim_col)
-_m_df = trimStatevals(m_df, m_trim_col)
+
+_y_df = replace_nans_with_avg(_y_df)
+_f_df = replace_nans_with_avg(_f_df)
+_fadj_df = replace_nans_with_avg(_fadj_df)
+
+
 
 state_bool_arr = get_stateBool_arr(_m_df, _y_df, _f_df, _fadj_df)
 state_real_arr = get_stateReal_arr(_m_df, _y_df, _f_df, _fadj_df)
@@ -151,17 +156,17 @@ target_col = ['episode_id', 'act_long','act_lat',
 
 vis_dataDistribution(state_arr, state_col)
 vis_dataDistribution(target_arr, target_col)
- # %%
-
-for item in m_col:
+# %%
+_y_df['act_long'].min()
+for item in o_col:
     plt.figure()
-    m_df[item].hist(bins=100)
+    _y_df[item].hist(bins=100)
     plt.title(item)
     plt.figure()
-    _m_df[item].hist(bins=100)
+    y_df[item].hist(bins=100)
     plt.title(item)
 
-#%%
+# %%
 all_episodes = spec['episode_id'].values
 len(all_episodes)
 test_episodes = spec.loc[(spec['frm_n']>40) &
@@ -175,7 +180,7 @@ validation_episodes = spec[~spec['episode_id'].isin(test_episodes)]['episode_id'
 validation_episodes = np.append(validation_episodes, test_episodes)
 validation_episodes = np.append(validation_episodes, [2895, 1289, 1037, 2870, 2400, 1344, 2872, 2266, 2765, 2215])
 training_episodes = np.setdiff1d(all_episodes, validation_episodes)
-len(validation_episodes)/len(training_episodes)
+len(validation_episodes)/len(all_episodes)
 
 # %%
 
@@ -213,7 +218,6 @@ for episode_id in all_episodes[0:5]:
 
 
 # %%
-
 data_saver(state_arr, 'states_arr')
 data_saver(target_arr, 'targets_arr')
 # data_saver(condition_arr, 'conditions_arr')

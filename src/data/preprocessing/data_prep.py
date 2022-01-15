@@ -39,7 +39,7 @@ class DataPrep():
         self.setScalers() # will set the scaler attributes
 
     def obsSequence(self, state_arr, target_arr):
-        actions = [target_arr[:, n:n+2] for n in range(4)]
+        actions = [target_arr[:, n:n+2] for n in range(8)[::2] ]
         traj_len = len(state_arr)
 
         if traj_len > 20:
@@ -86,8 +86,8 @@ class DataPrep():
         :Return: x, y arrays for model training.
         """
         state_arr, target_arr = self.get_episode_arr(episode_id)
-        # state_arr = self.applyStateScaler(state_arr)
-        # target_arr = self.applyActionScaler(target_arr)
+        state_arr = self.applyStateScaler(state_arr)
+        target_arr = self.applyActionScaler(target_arr)
         self.obsSequence(state_arr, target_arr)
 
     def shuffle(self, data_dict, type):

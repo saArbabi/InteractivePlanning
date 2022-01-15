@@ -20,7 +20,7 @@ config = {
 },
 "data_config": {"obs_n": 20,
                 "pred_step_n": 10,
-                "step_size": 3,
+                "step_size": 1,
                 "Note": ""
                 # "Note": "jerk as target"
 },
@@ -30,6 +30,8 @@ config = {
 data_objs =  DataObj(config).loadData()
 states_train, targets_train, conditions_train, \
                             states_val, targets_val, conditions_val = data_objs
+
+states_, targets_, conditions_ = data_objs[0:3] # train
 
 # %%
 sum([2, 3])
