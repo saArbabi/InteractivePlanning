@@ -1,12 +1,13 @@
 from src.data.preprocessing import data_prep
 from src.data.preprocessing import data_obj
+reload(data_prep)
+reload(data_obj)
 import numpy as np
 import pickle
 import matplotlib.pyplot as plt
 from importlib import reload
 
-reload(data_prep)
-reload(data_obj)
+
 DataPrep = data_prep.DataPrep
 DataObj = data_obj.DataObj
 

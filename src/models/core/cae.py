@@ -230,7 +230,6 @@ class FutureDecoder(tf.keras.Model):
             components_distribution=tfd.MultivariateNormalFullCovariance(
                 loc=mus,
                 covariance_matrix=cov))
-                # print('mus shape: ', mus.shape)
         return mvn
 
     def call(self, inputs):

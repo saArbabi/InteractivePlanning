@@ -21,8 +21,6 @@ def read_data():
 
     training_episodes = np.loadtxt('./src/datasets/training_episodes.csv', delimiter=',')
     validation_episodes = np.loadtxt('./src/datasets/validation_episodes.csv', delimiter=',')
-    test_episodes = np.loadtxt('./src/datasets/test_episodes.csv', delimiter=',')
-
 
 read_data()
 # %%
@@ -137,14 +135,6 @@ class DataPrep():
             # also you want to save validation arr for later use
             with open(self.dirName+'/data_obj', "wb") as f:
                 dill.dump(self, f)
-
-            with open(self.dirName+'/states_test', "wb") as f:
-                _arr = all_state_arr[np.isin(all_state_arr[:, 0], test_episodes)]
-                pickle.dump(_arr, f)
-
-            with open(self.dirName+'/targets_test', "wb") as f:
-                _arr = all_target_arr[np.isin(all_target_arr[:, 0], test_episodes)]
-                pickle.dump(_arr, f)
 
     def data_prep(self, episode_type=None):
         if not episode_type:

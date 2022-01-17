@@ -23,8 +23,6 @@ import time
 """
 Load data
 """
-
-# %%
 config = {
  "model_config": {
      "learning_rate": 1e-3,
@@ -33,14 +31,22 @@ config = {
 
 },
 "data_config": {"obs_n": 20,
-                "pred_step_n": 10,
+                "pred_step_n": 7,
                 "step_size": 1,
                 "Note": ""
 },
 "exp_id": "NA",
-"Note": "NA"
+"Note": "Without guided learning"
 }
 
+from data.preprocessing import data_prep
+from data.preprocessing import data_obj
+reload(data_prep)
+reload(data_obj)
+data_objs = DataObj(config).loadData()
+train_input, val_input = data_objs[0:3], data_objs[3:]
+train_input[0][7].shape
+# %%
 class Trainer():
     def __init__(self):
         self.train_losses = {
@@ -131,13 +137,10 @@ class Trainer():
         with open(self.exp_dir+'/test_losses.pickle', 'wb') as handle:
             pickle.dump(self.test_losses, handle)
 
-# data_objs = DataObj(config).loadData()
-# train_input, val_input = data_objs[0:3], data_objs[3:]
-# val_input[1][1][0].shape
 
 tf.random.set_seed(2021)
 model_trainer = Trainer()
-exp_id = 'cae_'+'002'
+exp_id = 'cae_'+'003'
 model_trainer.exp_dir = './src/models/experiments/'+exp_id
 config['exp_id'] = exp_id
 # model_trainer.train(train_input, val_input, epochs=1)
@@ -147,7 +150,7 @@ config['exp_id'] = exp_id
 ################## ##### ##################
 ################## ##### ##################
 ################## ##### ##################
-model_trainer.train(train_input, val_input, epochs=5)
+model_trainer.train(train_input, val_input, epochs=15)
 ################## ##### ##################
 ################## ##### ##################
 ################## ##### ##################
@@ -194,10 +197,10 @@ from planner import action_policy
 reload(action_policy)
 from planner.action_policy import Policy
 policy = Policy(config)
-policy.load_model(epoch=10)
+policy.load_model(epoch=20)
 
 traj_n = 5
-steps_n = 10
+steps_n = 20
 obs_n = 20
 np.random.seed(2022)
 eval_samples = np.random.randint(0, 120, 1) # samples from dataset to evaluate
@@ -218,9 +221,6 @@ for eval_sample in eval_samples:
         for act_axis in range(2):
             axs[veh_axis, act_axis].plot(range(obs_n-1, obs_n+steps_n), \
                             true_acts_f[0, :, act_axis], 'red', label=veh_names[veh_axis])
-
-            axs[veh_axis, act_axis].plot(range(obs_n-1, obs_n+steps_n-1), \
-                            conds[veh_axis][0, :, act_axis], 'blue', label=veh_names[veh_axis])
 
             axs[veh_axis, act_axis].plot(range(obs_n), \
                             true_acts_p[act_axis, : ], 'black', label=veh_names[veh_axis])

@@ -1,0 +1,5 @@
+1- models are evaluated using RWSE. The RWSE errors for each model are dumped
+in the model folder.
+
+2- planner is only evaluated qualitatively. The env.py module is used for
+..

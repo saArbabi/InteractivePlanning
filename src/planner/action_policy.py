@@ -23,14 +23,21 @@ class Policy():
 
     def load_model(self, epoch):
         exp_path = f'./src/models/experiments/{self.config["exp_id"]}/model_epo{epoch}'
-        print(exp_path)
-        print(os.getcwd())
+        print('exp_path: ', exp_path)
 
         from models.core import cae
         reload(cae)
         from models.core.cae import CAE
         self.model = CAE(self.config, model_use='inference')
         self.model.load_weights(exp_path).expect_partial()
+
+    def inverse_transform_actions(self, _gen_actions, traj_n, steps_n):
+        _gen_actions = np.concatenate(_gen_actions, axis=-1)
+        _gen_actions.shape = (traj_n*steps_n, 8)
+        _gen_actions = self.action_scaler.inverse_transform(_gen_actions)
+        _gen_actions.shape = (traj_n, steps_n, 8)
+        gen_actions = [_gen_actions[:, :, n:n+2] for n in range(8)[::2] ]
+        return gen_actions
 
     def gen_action_seq(self, inputs, traj_n, steps_n):
         """
@@ -47,21 +54,21 @@ class Policy():
             self.model.dec_model.steps_n = steps_n
             self.model.dec_model.traj_n = state_history.shape[0]
 
-
         enc_state = self.model.enc_model(state_history)
 
-
         _gen_actions = self.model.dec_model([conds, enc_state])
-        _gen_actions = [_act.numpy() for _act in _gen_actions]
+        gen_actions = [_act.numpy() for _act in _gen_actions]
+        # # t0 action is the conditional action
+        # gen_actions = []
+        # for cond, gen_action in zip(conds, _gen_actions):
+        #     gen_action = np.insert(gen_action, 0, cond[:, 0, :], axis=1)
+        #     gen_actions.append(gen_action)
 
-        # t0 action is the conditional action
-        gen_actions = []
-        for cond, gen_action in zip(conds, _gen_actions):
-            gen_action = np.insert(gen_action, 0, cond[:, 0, :], axis=1)
-            gen_actions.append(gen_action)
+
+        gen_actions = self.inverse_transform_actions(gen_actions, traj_n, steps_n)
         return gen_actions
 
-    def construct_policy(self, gen_actions, traj_n, steps_n):
+    def construct_policy(self, gen_actions, steps_n):
         """
         Fit cubic splines to generated action sequences.
         TODO
@@ -69,6 +76,7 @@ class Policy():
         - trip plans to length
         - add bc
         """
+        step_size = 0.3
         time_coarse = np.linspace(0, step_size*(steps_n), steps_n+1)
         time_fine = np.arange(0, time_coarse[-1]+0.05, 0.1)
 
