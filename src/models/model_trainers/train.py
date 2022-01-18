@@ -35,7 +35,7 @@ config = {
                 "step_size": 1,
                 "Note": ""
 },
-"exp_id": "NA",
+"model_name": "NA",
 "Note": "Without guided learning"
 }
 
@@ -45,7 +45,10 @@ reload(data_prep)
 reload(data_obj)
 data_objs = DataObj(config).loadData()
 train_input, val_input = data_objs[0:3], data_objs[3:]
-train_input[0][7].shape
+# train_input[0][7].shape
+# train_input[0][7][0, -1, :]
+# train_input[2][7][0][0, 0, :]
+# train_input[1][7][0][0, 0, :]
 # %%
 class Trainer():
     def __init__(self):
@@ -140,11 +143,11 @@ class Trainer():
 
 tf.random.set_seed(2021)
 model_trainer = Trainer()
-exp_id = 'cae_'+'003'
-model_trainer.exp_dir = './src/models/experiments/'+exp_id
-config['exp_id'] = exp_id
+model_name = 'cae_'+'003'
+model_trainer.exp_dir = './src/models/experiments/'+model_name
+config['model_name'] = model_name
 # model_trainer.train(train_input, val_input, epochs=1)
-# model_trainer.load_pre_trained(epoch_count='5')
+# model_trainer.load_pre_trained(epoch_count='20')
 # %%
 ################## Train ##################
 ################## ##### ##################
@@ -186,21 +189,15 @@ state_col = ['episode_id', 'vel', 'pc', 'act_long','act_lat',
                                      'vel', 'dx', 'act_long', 'act_lat',
                                      'vel', 'dx', 'act_long', 'act_lat',
                                      'lc_type', 'exists', 'exists', 'exists']
-i = 0
-indxs_m = {}
 indxs = [[2, 3], [6, 7], [10, 11], [14, 15]]
-# %%
-
-
 # %%
 from planner import action_policy
 reload(action_policy)
 from planner.action_policy import Policy
-policy = Policy(config)
-policy.load_model(epoch=20)
+policy = Policy()
+policy.load_model(model_name)
 
 traj_n = 5
-steps_n = 20
 obs_n = 20
 np.random.seed(2022)
 eval_samples = np.random.randint(0, 120, 1) # samples from dataset to evaluate
@@ -212,7 +209,8 @@ for eval_sample in eval_samples:
     state_history = states_[steps_n][[eval_sample], :, :]
     conds = [conditions_[steps_n][i][[eval_sample], :, :] for i in range(4)]
     inputs = [state_history, conds]
-    gen_actions = policy.gen_action_seq(inputs, traj_n, steps_n)
+    gen_actions = policy.gen_action_seq(inputs, traj_n)
+    action_plans = self.policy.construct_policy(gen_actions, state_history)
     for veh_axis in range(4):
         true_acts_f = targets_[steps_n][veh_axis][[eval_sample], :, :]
         true_acts_f = np.insert(true_acts_f, 0, conds[veh_axis][:, 0, :], axis=1)
@@ -228,7 +226,7 @@ for eval_sample in eval_samples:
             axs[veh_axis, act_axis].legend()
             for trace_axis in range(traj_n):
                 axs[veh_axis, act_axis].plot(range(obs_n-1, obs_n+steps_n), \
-                            gen_actions[veh_axis][trace_axis, :, act_axis], 'grey')
+                            action_plans[veh_axis][trace_axis, :, act_axis], 'grey')
 
 # %%
 a = 1, 2

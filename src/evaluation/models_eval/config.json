@@ -1,0 +1,16 @@
+{
+    "status": "COMPLETE",
+    "model_map": {
+        "cae_003": "CAE"
+    },
+    "mc_config": {
+        "episodes_n": 1,
+        "traces_n": 20
+    },
+    "progress_logging": {
+        "cae_003": {
+            "episode_in_prog": "1/1",
+            "last_update": "18/01/2022 12:39:47"
+        }
+    }
+}

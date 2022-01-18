@@ -1,0 +1,11 @@
+{
+    "status": "NOT STARTED",
+    "model_map": {
+        "cae_003": "CAE"
+    },
+    "mc_config": {
+        "episodes_n": 1,
+        "traces_n": 20
+    },
+    "progress_logging": {}
+}
