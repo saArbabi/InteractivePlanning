@@ -11,6 +11,7 @@ import time
 from src.planner.state_indexs import StateIndxs
 import sys
 sys.path.insert(0, './src')
+from src.evaluation.eval_data_obj import EvalDataObj
 
 class Policy():
     STEP_SIZE = 0.1
@@ -20,9 +21,9 @@ class Policy():
         self.gamma = np.power(self.discount_factor, np.array(range(0,21)))
         self.pred_h = 21 # steps with 0.1 step size
         self.indxs = StateIndxs()
+        self.data_obj = EvalDataObj()
 
-    def load_model(self, model_name):
-        epoch = 20
+    def load_model(self, model_name, epoch):
         data_configs_path = './src/datasets/preprocessed/'
         exp_dir = './src/models/experiments/'+model_name
         exp_path = f'{exp_dir}/model_epo{epoch}'
@@ -30,17 +31,9 @@ class Policy():
             config = json.load(handle)
             data_config = config['data_config']
 
-        config_names = os.listdir(data_configs_path+'config_files')
-        for config_name in config_names:
-            with open(data_configs_path+'config_files/'+config_name, 'r') as f:
-                data_config_i = json.load(f)
-
-            if data_config_i == data_config:
-                with open(data_configs_path+config_name[:-5]+'/'+'data_obj', 'rb') as f:
-                    self.data_obj = dill.load(f, ignore=True)
-                    self.action_scaler = self.data_obj. action_scaler
-                    self.step_size = self.data_obj. step_size
-
+        data_obj = self.data_obj.load_data_obj(data_config)
+        self.action_scaler = data_obj.action_scaler
+        self.step_size = config['data_config']['step_size']
         self.pred_step_n = np.ceil(self.pred_h/self.step_size).astype('int')
 
         from models.core import cae
@@ -95,20 +88,24 @@ class Policy():
             bc_der = (state_history[:, -1, indx_act]-\
                                     state_history[:, -2, indx_act])/self.STEP_SIZE
 
+
+            bc_der = np.repeat(bc_der, 20, axis=0)
             bc_ders.append(bc_der)
         return bc_ders
 
     def construct_policy(self, gen_actions, state_history):
+
         if self.step_size == 1:
             return gen_actions
 
+        print(gen_actions[0].shape)
         bc_ders = self.get_boundary_condition(state_history)
         time_coarse = np.linspace(0, self.STEP_SIZE*self.step_size*self.pred_step_n, self.pred_step_n+1)
         time_fine = np.arange(0, time_coarse[-1]+0.05, self.STEP_SIZE)
 
         vehicle_plans = [] # action plans for all the vehicles
         for gen_action, bc_der in zip(gen_actions, bc_ders):
-            f = CubicSpline(time_coarse, gen_action[:, :8, :],
+            f = CubicSpline(time_coarse, gen_action[:, :, :],
                                 bc_type=((1, bc_der), (2, np.zeros([20, 2]))),
                                 axis=1)
             plans = f(time_fine)

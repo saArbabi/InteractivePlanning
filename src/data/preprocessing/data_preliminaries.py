@@ -31,16 +31,11 @@ plt.plot(m_df[m_df['episode_id'] == 967]['act_long'].values)
 # def trimFeatureVals(veh_df)
 def trimStatevals(_df, names):
     df = _df.copy() #only training set
-
     for name in names:
-        if name == 'dx':
-            df.loc[df['dx']>70, 'dx'] = 70
-
-        else:
-            max_quantile = 0.9999
-            min, max = df[name].quantile([1-max_quantile, max_quantile])
-            df.loc[df[name]<min, name] = min
-            df.loc[df[name]>max, name] = max
+        max_quantile = 0.9999
+        min, max = df[name].quantile([1-max_quantile, max_quantile])
+        df.loc[df[name]<min, name] = min
+        df.loc[df[name]>max, name] = max
 
     return df
 
@@ -167,30 +162,20 @@ for item in o_col:
     plt.title(item)
 
 # %%
+np.random.seed(2020)
+
 all_episodes = spec['episode_id'].values
 len(all_episodes)
-test_episodes = spec.loc[(spec['frm_n']>40) &
-                        (spec['frm_n']<50) &
-                        (spec['f_id']>0) &
-                        (spec['fadj_id']>0)]['episode_id'].sample(1, replace=False).values
-
-validation_n = int(0.08*len(all_episodes))-int(len(test_episodes))
-validation_episodes = spec[~spec['episode_id'].isin(test_episodes)]['episode_id'].sample(  \
-                                    validation_n, replace=False).values
-validation_episodes = np.append(validation_episodes, test_episodes)
+validation_n = int(0.08*len(all_episodes))
+validation_episodes = spec['episode_id'].sample(validation_n, replace=False).values
 validation_episodes = np.append(validation_episodes, [2895, 1289, 1037, 2870, 2400, 1344, 2872, 2266, 2765, 2215])
 training_episodes = np.setdiff1d(all_episodes, validation_episodes)
 len(validation_episodes)/len(all_episodes)
-
-# %%
-
-np.random.choice(all_episodes,), replace=False)
 
 
 # %%
 
 all_episodes[all_episodes == 2895]
-test_episodes[test_episodes == 2895]
 training_episodes[training_episodes == 2895]
 validation_episodes[validation_episodes == 2895]
 
@@ -220,8 +205,14 @@ for episode_id in all_episodes[0:5]:
 # %%
 data_saver(state_arr, 'states_arr')
 data_saver(target_arr, 'targets_arr')
+state_arr.shape
 # data_saver(condition_arr, 'conditions_arr')
 
 data_saver(training_episodes, 'training_episodes')
 data_saver(validation_episodes, 'validation_episodes')
-data_saver(test_episodes, 'test_episodes')
+
+states_val_arr = state_arr[np.isin(state_arr[:, 0], validation_episodes)]
+targets_val_arr = target_arr[np.isin(target_arr[:, 0], validation_episodes)]
+states_val_arr.shape
+data_saver(states_val_arr, 'states_val_arr')
+data_saver(targets_val_arr, 'targets_val_arr')

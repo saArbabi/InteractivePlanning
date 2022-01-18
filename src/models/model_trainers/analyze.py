@@ -14,23 +14,19 @@ sys.path.insert(0, './src')
 
 
 """
-Load data
+Load config
 """
-model_name = 'cae_003'
+model_name = 'cae_001'
 exp_dir = './src/models/experiments/'+model_name
 with open(exp_dir+'/'+'config.json', 'rb') as handle:
     config = json.load(handle)
-data_obj = EvalDataObj(config['data_config'])
-
 # %%
+
 """
-Load policy (with config file)
+Load data
 """
-from src.planner import action_policy
-reload(action_policy)
-from src.planner.action_policy import Policy
-policy = Policy()
-policy.load_model(model_name)
+data_obj = EvalDataObj()
+states_arr, targets_arr = data_obj.load_val_data()
 # %%
 """
 Load evaluation object (This is needed for prepping test data )
@@ -39,18 +35,28 @@ from src.evaluation import eval_obj
 reload(eval_obj)
 from src.evaluation.eval_obj import MCEVAL
 eval_obj = MCEVAL()
-eval_obj.data_obj = data_obj.data_obj
-eval_obj.obs_n = eval_obj.data_obj.obs_n
-eval_obj.step_size = eval_obj.data_obj.step_size
+eval_obj.data_obj = data_obj.load_data_obj(config['data_config'])
+eval_obj.obs_n = config['data_config']['obs_n']
+eval_obj.step_size = config['data_config']['step_size']
 eval_obj.pred_step_n = np.ceil(21/eval_obj.step_size).astype('int')
-eval_obj.states_arr = data_obj.states_arr
-eval_obj.targets_arr = data_obj.targets_arr
-eval_obj.policy =  policy
+eval_obj.states_arr = states_arr
+eval_obj.targets_arr = targets_arr
 # %%
-episode_id = 2815
+"""
+Load policy (with config file)
+"""
+from src.planner import action_policy
+reload(action_policy)
+from src.planner.action_policy import Policy
+policy = Policy()
+epoch = 10
+policy.load_model(model_name, epoch)
+eval_obj.policy = policy
 
+episode_id = 129
 true_collection, pred_collection = eval_obj.run_episode(episode_id)
 true_collection, pred_collection = np.array(true_collection), np.array(pred_collection)
+pred_collection.shape
 true_collection.shape
 
 # %%
@@ -103,7 +109,8 @@ Find bad examples ?
 
 
 # %%
-
+pred_trace.shape
+time_steps[19:].shape
 # %%
 """
 Visualisation of model predictions. Use this for debugging.
@@ -112,12 +119,15 @@ m = 0
 indx_acts = eval_obj.indxs.indx_acts
 obs_n = 20
 traces_n = 5
-
+time_steps = np.linspace(0, 4., 41)
 veh_names = ['veh_m', 'veh_y', 'veh_f', 'veh_fadj']
 scene_samples = [0]
-scene_samples = range(6)
+scene_samples = range(1)
 for scene_sample in scene_samples:
     fig, axs = plt.subplots(figsize=(10, 1))
+    plt.text(0.1, 0.4,
+             'scene_sample: '+str(scene_sample)+'\n'
+             'epoch: '+str(epoch), fontsize=10)
     fig, axs = plt.subplots(4, 2, figsize=(10, 10))
 
     for veh_axis in range(4):
@@ -125,7 +135,6 @@ for scene_sample in scene_samples:
             true_trace = true_collection[scene_sample, 0, :, indx_acts[veh_axis][act_axis]+2]
             axs[veh_axis, act_axis].plot(time_steps[19:], true_trace[19:], color='red', linestyle='--')
             axs[veh_axis, act_axis].plot(time_steps[:20], true_trace[:20], color='black')
-
             for trace_axis in range(traces_n):
                 pred_trace = pred_collection[scene_sample, trace_axis, :, indx_acts[veh_axis][act_axis]]
                 axs[veh_axis, act_axis].plot(time_steps[19:], pred_trace,  color='grey')
