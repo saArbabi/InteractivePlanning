@@ -232,7 +232,6 @@ class MCEVAL():
             pred_collection.append(state_trace)
             true_collection.append(true_state_snips[[split_i], :, :])
 
-        self.episode_in_prog += 1
         return true_collection, pred_collection
 
     def run(self):
@@ -251,53 +250,7 @@ class MCEVAL():
 
                 self.true_collections.extend(true_collection)
                 self.pred_collections.extend(pred_collection)
+                self.episode_in_prog += 1
+
                 self.dump_mc_logs(model_name)
                 self.update_eval_config(model_name)
-
-
-"""
-Load data
-"""
-config = {
- "model_config": {
-     "learning_rate": 1e-3,
-     "components_n": 5,
-    "batch_size": 512,
-
-},
-"data_config": {"obs_n": 20,
-                "pred_step_n": 7,
-                "step_size": 1,
-                "Note": ""
-},
-"exp_id": "cae_003",
-"Note": "Without guided learning"
-}
-np.set_printoptions(suppress=True)
-
-eval_obj = MCEVAL()
-eval_obj.config = eval_obj.read_eval_config()
-
-# data_obj = EvalDataObj(config['data_config'])
-eval_obj.data_obj = data_obj.data_obj
-
-eval_obj.obs_n = eval_obj.data_obj.obs_n
-eval_obj.step_size = eval_obj.data_obj.step_size
-eval_obj.pred_step_n = np.ceil(21/eval_obj.step_size).astype('int')
-
-eval_obj.states_arr = data_obj.states_arr
-eval_obj.targets_arr = data_obj.targets_arr
-# %%
-
-from src.planner import action_policy
-reload(action_policy)
-from src.planner.action_policy import Policy
-policy = Policy()
-eval_obj.config = eval_obj.read_eval_config()
-# #
-eval_obj.policy = policy
-eval_obj.policy.action_scaler = eval_obj.data_obj.action_scaler
-eval_obj.run()
-
-eval_obj.config
- 

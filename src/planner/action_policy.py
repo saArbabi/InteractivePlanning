@@ -23,12 +23,24 @@ class Policy():
 
     def load_model(self, model_name):
         epoch = 20
+        data_configs_path = './src/datasets/preprocessed/'
         exp_dir = './src/models/experiments/'+model_name
         exp_path = f'{exp_dir}/model_epo{epoch}'
         with open(exp_dir+'/'+'config.json', 'rb') as handle:
             config = json.load(handle)
+            data_config = config['data_config']
 
-        self.step_size = config['data_config']['step_size']
+        config_names = os.listdir(data_configs_path+'config_files')
+        for config_name in config_names:
+            with open(data_configs_path+'config_files/'+config_name, 'r') as f:
+                data_config_i = json.load(f)
+
+            if data_config_i == data_config:
+                with open(data_configs_path+config_name[:-5]+'/'+'data_obj', 'rb') as f:
+                    self.data_obj = dill.load(f, ignore=True)
+                    self.action_scaler = self.data_obj. action_scaler
+                    self.step_size = self.data_obj. step_size
+
         self.pred_step_n = np.ceil(self.pred_h/self.step_size).astype('int')
 
         from models.core import cae

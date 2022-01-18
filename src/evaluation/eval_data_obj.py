@@ -13,8 +13,8 @@ class EvalDataObj():
         config_names = os.listdir(self.dir_path+'config_files')
         for config_name in config_names:
             with open(self.dir_path+'config_files/'+config_name, 'r') as f:
-                config = json.load(f)
-            if config == data_config:
+                data_config_i = json.load(f)
+            if data_config_i == data_config:
                 with open(self.dir_path+config_name[:-5]+'/'+'data_obj', 'rb') as f:
                     self.data_obj = dill.load(f, ignore=True)
 
