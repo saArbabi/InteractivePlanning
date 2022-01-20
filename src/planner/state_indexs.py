@@ -1,3 +1,10 @@
+"""
+state_col = ['vel', 'pc', 'act_long','act_lat',
+                                     'vel', 'dx', 'act_long', 'act_lat',
+                                     'vel', 'dx', 'act_long', 'act_lat',
+                                     'vel', 'dx', 'act_long', 'act_lat',
+                                     'lc_type', 'exists', 'exists', 'exists']
+"""
 class StateIndxs():
     def __init__(self):
         self.set_stateIndex()

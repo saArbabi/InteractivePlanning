@@ -77,31 +77,24 @@ class Policy():
         gen_actions = self.inverse_transform_actions(gen_actions, traj_n)
         return gen_actions
 
-    def get_boundary_condition(self, state_history):
+    def get_boundary_condition(self, true_trace_history):
         """
         This is to ensure smooth transitions from one action to the next.
-        The bc is the first time derivative of a plan at current time step.
-        Note: Time derivative is the same regardless of action scale.
         """
         bc_ders = []
         for indx_act in self.indxs.indx_acts:
-            bc_der = (state_history[:, -1, indx_act]-\
-                                    state_history[:, -2, indx_act])/self.STEP_SIZE
-
-
-            bc_der = np.repeat(bc_der, 20, axis=0)
+            bc_der = (true_trace_history[:, -1, indx_act[0]:indx_act[1]+1]-\
+                    true_trace_history[:, -2, indx_act[0]:indx_act[1]+1])/self.STEP_SIZE
             bc_ders.append(bc_der)
         return bc_ders
 
-    def construct_policy(self, gen_actions, state_history):
+    def construct_policy(self, gen_actions, bc_ders):
         """Spline interpolation to turn action sequences into continuous plans.
         """
         if self.step_size == 1:
             gen_actions = [a[:, :self.pred_h+1, :]  for a in gen_actions]
             return gen_actions
 
-        print(gen_actions[0].shape)
-        bc_ders = self.get_boundary_condition(state_history)
         time_coarse = np.linspace(0, self.STEP_SIZE*self.step_size*self.pred_step_n, self.pred_step_n+1)
         time_fine = np.arange(0, time_coarse[-1]+0.05, self.STEP_SIZE)
 
@@ -110,6 +103,8 @@ class Policy():
             f = CubicSpline(time_coarse, gen_action[:, :, :],
                                 bc_type=((1, bc_der), (2, np.zeros([20, 2]))),
                                 axis=1)
+            # f = CubicSpline(time_coarse, gen_action[:, :, :], axis=1)
+
             plans = f(time_fine)
             vehicle_plans.append(plans[:, :self.pred_h+1, :])
 

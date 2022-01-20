@@ -64,20 +64,20 @@ class ForwardSim():
         # state_0 is initial traffic state
         # s_0 >> a_0 >> s_1 >> a_1 >> s_2 >> a_2 >> s_3...
         trajs_n = action_plans[0].shape[0]
-        state_trace = np.zeros([trajs_n, self.pred_h+1, state_0.shape[-1]])
+        pred_trace = np.zeros([trajs_n, self.pred_h+1, state_0.shape[-1]])
         state_t_i = state_0
 
         for step in range(self.pred_h):
             veh_actions = [plan[:, step, :] for plan in action_plans]
             self.update_veh_actions(state_t_i, veh_actions)
-            state_trace[:, step, :] = state_t_i
+            pred_trace[:, step, :] = state_t_i
 
             state_t_ii = self.step(state_t_i, veh_actions)
-            state_trace[:, step+1, :] = state_t_ii
+            pred_trace[:, step+1, :] = state_t_ii
             state_t_i = state_t_ii
 
         veh_actions = [plan[:, -1, :] for plan in action_plans] # last state actions
         self.update_veh_actions(state_t_i, veh_actions)
-        state_trace[:, -1, :] = state_t_i
+        pred_trace[:, -1, :] = state_t_i
 
-        return state_trace
+        return pred_trace

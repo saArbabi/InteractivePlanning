@@ -11,8 +11,13 @@ from src.evaluation.eval_data_obj import EvalDataObj
 
 reload(pyplot)
 sys.path.insert(0, './src')
-
-
+# %%
+"""
+Load data
+"""
+data_obj = EvalDataObj()
+states_arr, targets_arr = data_obj.load_val_data()
+# %%
 """
 Load config
 """
@@ -20,14 +25,7 @@ model_name = 'cae_003'
 exp_dir = './src/models/experiments/'+model_name
 with open(exp_dir+'/'+'config.json', 'rb') as handle:
     config = json.load(handle)
-# %%
 
-"""
-Load data
-"""
-data_obj = EvalDataObj()
-states_arr, targets_arr = data_obj.load_val_data()
-# %%
 """
 Load evaluation object (This is needed for prepping test data )
 """
@@ -58,8 +56,29 @@ true_collection, pred_collection = np.array(true_collection), np.array(pred_coll
 pred_collection.shape
 true_collection.shape
 true_collection[:, :, 19:, :].shape
-
 # %%
+
+true_collection[0, 0, 19:, indx_acts[0][0]+2]
+true_collection[0, 0, 19:, indx_acts[0][1]+2]
+pred_collection[0, 0, :, indx_acts[0][0]][::3]
+
+
+pred_collection[0, 0, :, 2:3]
+pred_collection[0, 0, :, 2:4]
+pred_collection[0, 0, :, 3]
+pred_collection[0, 0, :, [2, 1]]
+pred_collection[0, 0, :, [2, 3]]
+pred_collection[0, 0, :, [2, 3, 4]].shape
+pred_collection[0, :, :, [2, 3]].shape
+pred_collection[0, :, :, 2: 4].shape
+pred_collection[0, [1], :, 2: 4].shape
+pred_collection[0, :, :, [2]].shape
+pred_collection[0, :, :, [2]].shape
+
+(true_collection[0, 0, 19, 4]-true_collection[0, 0, 18, 4])/0.1
+(true_collection[0, 0, 19, 5]-true_collection[0, 0, 18, 5])/0.1
+(true_collection[0, 0, 19, 9]-true_collection[0, 0, 18, 9])/0.1
+(pred_collection[0, 0, 1, 7]-pred_collection[0, 0, 0, 7])/0.1
 
 
 # %%
@@ -107,10 +126,6 @@ for name, loss in losses.items():
 Find bad examples ?
 """
 
-
-# %%
-pred_trace.shape
-time_steps[19:].shape
 # %%
 """
 Visualisation of model predictions. Use this for debugging.
@@ -118,14 +133,17 @@ Visualisation of model predictions. Use this for debugging.
 m = 0
 indx_acts = eval_obj.indxs.indx_acts
 obs_n = 20
-traces_n = 5
+traces_n = 3
 time_steps = np.linspace(0, 3.9, 40)
 veh_names = ['veh_m', 'veh_y', 'veh_f', 'veh_fadj']
 scene_samples = [0]
-scene_samples = range(4)
+scene_samples = range(1)
 for scene_sample in scene_samples:
     fig, axs = plt.subplots(figsize=(10, 1))
-    plt.text(0.1, 0.4,
+    start_time = true_collection[scene_sample, 0, 0, 1]
+    plt.text(0.1, 0.1,
+             'model_name: '+model_name+'\n'
+             'start_time: '+str(start_time)+'\n'
              'scene_sample: '+str(scene_sample)+'\n'
              'epoch: '+str(epoch), fontsize=10)
     fig, axs = plt.subplots(4, 2, figsize=(10, 10))
@@ -138,3 +156,5 @@ for scene_sample in scene_samples:
             for trace_axis in range(traces_n):
                 pred_trace = pred_collection[scene_sample, trace_axis, :, indx_acts[veh_axis][act_axis]]
                 axs[veh_axis, act_axis].plot(time_steps[19:], pred_trace,  color='grey')
+                axs[veh_axis, act_axis].scatter(time_steps[19:][::3], pred_trace[::3],  color='black')
+# plt.savefig("test.png", dpi=500)

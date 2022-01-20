@@ -195,22 +195,16 @@ class MCEVAL():
         states, targs, conds = self.obsSequence(state_arr_sca, target_arr_sca)
         random_snippets = np.random.choice(range(states.shape[0]), splits_n, replace=False)
 
-        start_steps = states[random_snippets, 0, 1].astype('int')
-        end_steps = targs[0][random_snippets, -1, 1].astype('int')
-
         states = states[random_snippets, :, 2:]
         targs = [targ[random_snippets, :, 2:] for targ in targs]
         conds = [cond[random_snippets, :, 2:] for cond in conds]
 
         true_state_snips = []
-        state0s = []
-
-        for start_step, end_step in zip(start_steps, end_steps):
-            true_state_snips.append(state_arr[start_step:end_step+1, :])
-            state0s.append(state_arr[start_step+self.obs_n-1, 2:])
+        for start_step in random_snippets:
+            true_state_snips.append(state_arr[start_step:start_step + 40, :])
 
         test_data = [states[:, :, :], conds] # to feed to model
-        return test_data, np.array(state0s)[:, :], np.array(true_state_snips)[:, :, :]
+        return test_data, np.array(true_state_snips)[:, :, :]
 
     def run_episode(self, episode_id):
         # test_densities = # traffic densities to evaluate the model on
@@ -222,7 +216,7 @@ class MCEVAL():
         np.random.seed(2020)
         tf.random.set_seed(2020) # each trace has a unique tf seed
         outputs = self.prep_episode(episode_id=episode_id, splits_n=6)
-        test_data, state0s, true_state_snips = outputs
+        test_data, true_state_snips = outputs
         # true_state_snips: [episode_id, time_stamps, ...]
         self.fs.max_pc = true_state_snips[:, :, self.indxs.indx_m['pc']+2].max()
         self.fs.min_pc = true_state_snips[:, :, self.indxs.indx_m['pc']+2].min()
@@ -231,14 +225,19 @@ class MCEVAL():
         # get action plans for this scene
             states = test_data[0][[split_i], :, :]
             conds = [item[[split_i], :, :] for item in test_data[1]]
+            true_trace = true_state_snips[[split_i], :, :]
+            true_trace_history = np.repeat(\
+                    true_trace[:, :self.obs_n-1, 2:], self.traces_n, axis=0)
+
             gen_actions = self.policy.gen_action_seq(\
                                 [states, conds], traj_n=self.traces_n)
-            action_plans = self.policy.construct_policy(gen_actions, states)
 
-            state0 = np.repeat(state0s[[split_i], :], self.traces_n, axis=0)
-            state_trace = self.fs.forward_sim(state0, action_plans)
-            pred_collection.append(state_trace)
-            true_collection.append(true_state_snips[[split_i], :, :])
+            bc_ders = self.policy.get_boundary_condition(true_trace_history)
+            action_plans = self.policy.construct_policy(gen_actions, bc_ders)
+            state0 = true_trace_history[:, -1, 2:]
+            pred_trace = self.fs.forward_sim(state0, action_plans)
+            pred_collection.append(pred_trace)
+            true_collection.append(true_trace)
 
         return true_collection, pred_collection
 
