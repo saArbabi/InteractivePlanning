@@ -1,6 +1,8 @@
 {
     "status": "NOT STARTED",
     "model_map": {
+        "cae_001": "CAE",
+        "cae_002": "CAE",
         "cae_003": "CAE"
     },
     "mc_config": {

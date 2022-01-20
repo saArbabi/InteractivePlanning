@@ -21,7 +21,6 @@ class Policy():
         self.gamma = np.power(self.discount_factor, np.array(range(0,21)))
         self.pred_h = 20 # steps with 0.1 step size
         self.indxs = StateIndxs()
-        self.data_obj = EvalDataObj()
 
     def load_model(self, model_name, epoch):
         data_configs_path = './src/datasets/preprocessed/'
@@ -31,8 +30,9 @@ class Policy():
             config = json.load(handle)
             data_config = config['data_config']
 
-        data_obj = self.data_obj.load_data_obj(data_config)
-        self.action_scaler = data_obj.action_scaler
+
+        with open('./src/datasets/'+'action_scaler', 'rb') as f:
+            self.action_scaler = pickle.load(f)
         self.step_size = config['data_config']['step_size']
         self.pred_step_n = np.ceil(self.pred_h/self.step_size).astype('int')
 

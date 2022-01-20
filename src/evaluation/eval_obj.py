@@ -7,7 +7,7 @@ Steps for MC evaluation a given model is as follows:
 which model.
 (1) load the testset for a given traffic desity. EvalDataObj contains the test data.
 () divide the testset into snippets: past states and future states
-() scale (with data_obj) and then feed the testset to the model to compute actions
+() scale and then feed the testset to the model to compute actions
 () turn the plans to states of interest (forward_sim)
 () dump collected states for all the vehicels of interest in their respective model folders.
     depending on the model, different rwse metrics are collected
@@ -52,8 +52,16 @@ class MCEVAL():
         self.collections = {} # collection of mc visited states
         self.fs = ForwardSim()
         self.indxs = StateIndxs()
+        self.data_obj = EvalDataObj()
         self.config = self.read_eval_config()
         self.traces_n = self.config['mc_config']['traces_n']
+        self.loadScalers() # will set the scaler attributes
+
+    def loadScalers(self):
+        with open('./src/datasets/'+'state_scaler', 'rb') as f:
+            self.state_scaler = pickle.load(f)
+        with open('./src/datasets/'+'action_scaler', 'rb') as f:
+            self.action_scaler = pickle.load(f)
 
     def read_eval_config(self):
         with open(self.eval_config_dir, 'rb') as handle:
@@ -180,8 +188,8 @@ class MCEVAL():
         target_arr = np.insert(target_arr, 1, time_stamps, axis=1)
         state_arr_sca = state_arr.copy()
         target_arr_sca = target_arr.copy()
-        state_arr_sca[:, 2:] = self.data_obj.applyStateScaler(state_arr_sca[:, 2:])
-        target_arr_sca[:, 2:] = self.data_obj.applyActionScaler(target_arr_sca[:, 2:])
+        state_arr_sca[:, 2:-4] = self.state_scaler.transform(state_arr_sca[:, 2:-4])
+        target_arr_sca[:, 2:] = self.action_scaler.transform(target_arr_sca[:, 2:])
 
         splits_n = 6
         states, targs, conds = self.obsSequence(state_arr_sca, target_arr_sca)
@@ -237,12 +245,14 @@ class MCEVAL():
     def run(self):
         self.model_map = self.config['model_map']
         model_names = self.model_map.keys()
+        self.states_arr, self.targets_arr = self.data_obj.load_val_data()
+
         for model_name in model_names:
             if self.is_eval_complete(model_name):
                 continue
             self.policy.load_model(model_name)
             print('Model being evaluated: ', model_name)
-            episode_ids = [2815, 2815]
+            episode_ids = [129]
 
             while self.episode_in_prog < self.target_episode_count:
                 true_collection, pred_collection = self.run_episode(\

@@ -34,7 +34,7 @@ class DataPrep():
         self.step_size = self.config["step_size"]
         self.dirName = dirName
         os.mkdir(dirName)
-        self.setScalers() # will set the scaler attributes
+        self.loadScalers() # will set the scaler attributes
 
     def obsSequence(self, state_arr, target_arr):
         actions = [target_arr[:, n:n+2] for n in range(8)[::2] ]
@@ -75,9 +75,11 @@ class DataPrep():
     def applyActionScaler(self, _arr):
         return self.action_scaler.transform(_arr)
 
-    def setScalers(self):
-        self.state_scaler = StandardScaler().fit(all_state_arr[:, 1:-4])
-        self.action_scaler = StandardScaler().fit(all_target_arr[:, 1:])
+    def loadScalers(self):
+        with open('./src/datasets/'+'state_scaler', 'rb') as f:
+            self.state_scaler = pickle.load(f)
+        with open('./src/datasets/'+'action_scaler', 'rb') as f:
+            self.action_scaler = pickle.load(f)
 
     def episode_prep(self, episode_id):
         """
@@ -131,10 +133,6 @@ class DataPrep():
             delattr(self, 'states')
             delattr(self, 'targs')
             delattr(self, 'conds')
-
-            # also you want to save validation arr for later use
-            with open(self.dirName+'/data_obj', "wb") as f:
-                dill.dump(self, f)
 
     def data_prep(self, episode_type=None):
         if not episode_type:

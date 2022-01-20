@@ -35,7 +35,6 @@ from src.evaluation import eval_obj
 reload(eval_obj)
 from src.evaluation.eval_obj import MCEVAL
 eval_obj = MCEVAL()
-eval_obj.data_obj = data_obj.load_data_obj(config['data_config'])
 eval_obj.obs_n = config['data_config']['obs_n']
 eval_obj.step_size = config['data_config']['step_size']
 eval_obj.pred_step_n = np.ceil(20/eval_obj.step_size).astype('int')
