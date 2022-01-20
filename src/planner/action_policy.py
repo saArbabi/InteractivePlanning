@@ -19,7 +19,7 @@ class Policy():
         # self.data_obj = test_data.data_obj
         self.discount_factor = 0.9
         self.gamma = np.power(self.discount_factor, np.array(range(0,21)))
-        self.pred_h = 21 # steps with 0.1 step size
+        self.pred_h = 20 # steps with 0.1 step size
         self.indxs = StateIndxs()
         self.data_obj = EvalDataObj()
 
@@ -94,8 +94,10 @@ class Policy():
         return bc_ders
 
     def construct_policy(self, gen_actions, state_history):
-
+        """Spline interpolation to turn action sequences into continuous plans.
+        """
         if self.step_size == 1:
+            gen_actions = [a[:, :self.pred_h+1, :]  for a in gen_actions]
             return gen_actions
 
         print(gen_actions[0].shape)
@@ -109,7 +111,7 @@ class Policy():
                                 bc_type=((1, bc_der), (2, np.zeros([20, 2]))),
                                 axis=1)
             plans = f(time_fine)
-            vehicle_plans.append(plans[:, :self.pred_h, :])
+            vehicle_plans.append(plans[:, :self.pred_h+1, :])
 
         return vehicle_plans
 

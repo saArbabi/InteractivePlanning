@@ -5,6 +5,7 @@ class ForwardSim():
     STEP_SIZE = 0.1
     def __init__(self):
         self.indxs = StateIndxs()
+        self.pred_h = 20 # steps with 0.1 step size
 
     def get_dx(self, vel_m, vel_o, veh_orientation):
         """
@@ -62,14 +63,11 @@ class ForwardSim():
     def forward_sim(self, state_0, action_plans):
         # state_0 is initial traffic state
         # s_0 >> a_0 >> s_1 >> a_1 >> s_2 >> a_2 >> s_3...
-        steps_n = action_plans[0].shape[1]
         trajs_n = action_plans[0].shape[0]
-        states_n = state_0.shape[-1]
-
-        state_trace = np.zeros([trajs_n, steps_n, states_n])
+        state_trace = np.zeros([trajs_n, self.pred_h+1, state_0.shape[-1]])
         state_t_i = state_0
 
-        for step in range(steps_n-1):
+        for step in range(self.pred_h):
             veh_actions = [plan[:, step, :] for plan in action_plans]
             self.update_veh_actions(state_t_i, veh_actions)
             state_trace[:, step, :] = state_t_i

@@ -32,7 +32,7 @@ config = {
 },
 "data_config": {"obs_n": 20,
                 "pred_step_n": 7,
-                "step_size": 1,
+                "step_size": 3,
                 "Note": ""
 },
 "model_name": "NA",
@@ -143,7 +143,7 @@ class Trainer():
 
 tf.random.set_seed(2021)
 model_trainer = Trainer()
-model_name = 'cae_'+'001'
+model_name = 'cae_'+'003'
 model_trainer.exp_dir = './src/models/experiments/'+model_name
 config['model_name'] = model_name
 # model_trainer.train(train_input, val_input, epochs=1)
@@ -153,7 +153,7 @@ config['model_name'] = model_name
 ################## ##### ##################
 ################## ##### ##################
 ################## ##### ##################
-model_trainer.train(train_input, val_input, epochs=5)
+model_trainer.train(train_input, val_input, epochs=20)
 ################## ##### ##################
 ################## ##### ##################
 ################## ##### ##################

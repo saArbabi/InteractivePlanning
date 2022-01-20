@@ -16,7 +16,7 @@ sys.path.insert(0, './src')
 """
 Load config
 """
-model_name = 'cae_001'
+model_name = 'cae_003'
 exp_dir = './src/models/experiments/'+model_name
 with open(exp_dir+'/'+'config.json', 'rb') as handle:
     config = json.load(handle)
@@ -38,18 +38,18 @@ eval_obj = MCEVAL()
 eval_obj.data_obj = data_obj.load_data_obj(config['data_config'])
 eval_obj.obs_n = config['data_config']['obs_n']
 eval_obj.step_size = config['data_config']['step_size']
-eval_obj.pred_step_n = np.ceil(21/eval_obj.step_size).astype('int')
+eval_obj.pred_step_n = np.ceil(20/eval_obj.step_size).astype('int')
 eval_obj.states_arr = states_arr
 eval_obj.targets_arr = targets_arr
 # %%
 """
-Load policy (with config file)
+Load policy
 """
 from src.planner import action_policy
 reload(action_policy)
 from src.planner.action_policy import Policy
 policy = Policy()
-epoch = 10
+epoch = 20
 policy.load_model(model_name, epoch)
 eval_obj.policy = policy
 
@@ -58,6 +58,7 @@ true_collection, pred_collection = eval_obj.run_episode(episode_id)
 true_collection, pred_collection = np.array(true_collection), np.array(pred_collection)
 pred_collection.shape
 true_collection.shape
+true_collection[:, :, 19:, :].shape
 
 # %%
 
@@ -119,10 +120,10 @@ m = 0
 indx_acts = eval_obj.indxs.indx_acts
 obs_n = 20
 traces_n = 5
-time_steps = np.linspace(0, 4., 41)
+time_steps = np.linspace(0, 3.9, 40)
 veh_names = ['veh_m', 'veh_y', 'veh_f', 'veh_fadj']
 scene_samples = [0]
-scene_samples = range(1)
+scene_samples = range(4)
 for scene_sample in scene_samples:
     fig, axs = plt.subplots(figsize=(10, 1))
     plt.text(0.1, 0.4,
