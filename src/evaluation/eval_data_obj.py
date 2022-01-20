@@ -15,8 +15,7 @@ class EvalDataObj():
     def load_test_episode_ids(self, traffic_density):
         assert traffic_density == '' or \
                                         traffic_density == 'high_density' or \
-                                        traffic_density == 'medium_density' or \
-                                        traffic_density == 'low_density'
+                                        traffic_density == 'medium_density'  
 
         if traffic_density == '':
             dir_path = f'./src/datasets/validation_episodes.csv'

@@ -3,24 +3,30 @@
     "model_map": {
         "cae_001": "CAE",
         "cae_002": "CAE",
-        "cae_003": "CAE"
+        "cae_003": "CAE",
+        "cae_004": "CAE"
     },
     "mc_config": {
-        "episodes_n": 1,
-        "traces_n": 20
+        "episodes_n": 5,
+        "traces_n": 20,
+        "splits_n": 3
     },
     "progress_logging": {
         "cae_001": {
-            "episode_in_prog": "1/1",
-            "last_update": "20/01/2022 15:45:08"
+            "episode_in_prog": "5/5",
+            "last_update": "20/01/2022 16:49:53"
         },
         "cae_002": {
-            "episode_in_prog": "1/1",
-            "last_update": "20/01/2022 15:45:14"
+            "episode_in_prog": "5/5",
+            "last_update": "20/01/2022 16:50:06"
         },
         "cae_003": {
-            "episode_in_prog": "1/1",
-            "last_update": "20/01/2022 15:45:22"
+            "episode_in_prog": "5/5",
+            "last_update": "20/01/2022 16:50:16"
+        },
+        "cae_004": {
+            "episode_in_prog": "5/5",
+            "last_update": "20/01/2022 16:50:24"
         }
     }
 }

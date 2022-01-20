@@ -26,7 +26,7 @@ reload(eval_obj)
 from src.evaluation.eval_obj import MCEVAL
 
 
-model_name = 'cae_003'
+model_name = 'cae_004'
 eval_obj = MCEVAL()
 config = eval_obj.read_model_config(model_name)
 eval_obj.states_arr = states_arr
@@ -105,11 +105,11 @@ Visualisation of model predictions. Use this for debugging.
 m = 0
 indx_acts = eval_obj.indxs.indx_acts
 obs_n = 20
-traces_n = 3
+traces_n = 10
 time_steps = np.linspace(0, 3.9, 40)
 veh_names = ['veh_m', 'veh_y', 'veh_f', 'veh_fadj']
 scene_samples = [0]
-scene_samples = range(1)
+scene_samples = range(3)
 for scene_sample in scene_samples:
     fig, axs = plt.subplots(figsize=(10, 1))
     start_time = true_collection[scene_sample, 0, 0, 1]
@@ -128,5 +128,5 @@ for scene_sample in scene_samples:
             for trace_axis in range(traces_n):
                 pred_trace = pred_collection[scene_sample, trace_axis, :, indx_acts[veh_axis][act_axis]]
                 axs[veh_axis, act_axis].plot(time_steps[19:], pred_trace,  color='grey')
-                axs[veh_axis, act_axis].scatter(time_steps[19:][::3], pred_trace[::3],  color='black')
+                axs[veh_axis, act_axis].scatter(time_steps[19:][::5], pred_trace[::5],  color='black')
 # plt.savefig("test.png", dpi=500)

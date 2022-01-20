@@ -3,11 +3,13 @@
     "model_map": {
         "cae_001": "CAE",
         "cae_002": "CAE",
-        "cae_003": "CAE"
+        "cae_003": "CAE",
+        "cae_004": "CAE"
     },
     "mc_config": {
-        "episodes_n": 1,
-        "traces_n": 20
+        "episodes_n": 5,
+        "traces_n": 20,
+        "splits_n": 3
     },
     "progress_logging": {}
 }

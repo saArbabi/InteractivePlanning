@@ -30,7 +30,6 @@ Note: random seeds are set to ensure repeatable MC runs.
 """
 
 import os
-print(os.getcwd())
 # from planner import forward_sim
 # reload(forward_sim)
 from planner.forward_sim import ForwardSim
@@ -56,6 +55,7 @@ class MCEVAL():
         self.data_obj = EvalDataObj()
         self.config = self.read_eval_config()
         self.traces_n = self.config['mc_config']['traces_n']
+        self.splits_n = self.config['mc_config']['splits_n']
         self.val_run_name = val_run_name
         self.loadScalers() # will set the scaler attributes
 
@@ -168,7 +168,7 @@ class MCEVAL():
         targs = [[] for n in range(4)]
         conds = [[] for n in range(4)]
 
-        if traj_len > 20:
+        if traj_len > 30:
             prev_states = deque(maxlen=self.obs_n)
             for i in range(traj_len):
                 prev_states.append(state_arr[i])
@@ -188,7 +188,7 @@ class MCEVAL():
         conds = [np.array(cond) for cond in conds]
         return np.array(states), targs, conds
 
-    def prep_episode(self, episode_id, splits_n):
+    def prep_episode(self, episode_id):
         """
         Split the episode sequence into splits_n.
         Returns test_data to feed the model and true_state_snips for model evaluation
@@ -202,10 +202,10 @@ class MCEVAL():
         target_arr_sca = target_arr.copy()
         state_arr_sca[:, 2:-4] = self.state_scaler.transform(state_arr_sca[:, 2:-4])
         target_arr_sca[:, 2:] = self.action_scaler.transform(target_arr_sca[:, 2:])
-
-        splits_n = 6
         states, targs, conds = self.obsSequence(state_arr_sca, target_arr_sca)
-        random_snippets = np.random.choice(range(states.shape[0]), splits_n, replace=False)
+        if states.shape[0] < self.splits_n:
+            return
+        random_snippets = np.random.choice(range(states.shape[0]), self.splits_n, replace=False)
 
         states = states[random_snippets, :, 2:]
         targs = [targ[random_snippets, :, 2:] for targ in targs]
@@ -221,19 +221,19 @@ class MCEVAL():
     def run_episode(self, episode_id):
         # test_densities = # traffic densities to evaluate the model on
         # for density in test_densities
-        # episode_ids = self.data_obj.load_test_episode_ids(density)
-
         pred_collection = [] # evental shape: [m scenarios, n traces, time_steps_n, states_n]
         true_collection = [] # evental shape: [m scenarios, 1, time_steps_n, states_n]
         np.random.seed(2020)
         tf.random.set_seed(2020) # each trace has a unique tf seed
-        outputs = self.prep_episode(episode_id=episode_id, splits_n=6)
+        outputs = self.prep_episode(episode_id=episode_id)
+        if not outputs:
+            return true_collection, pred_collection
         test_data, true_state_snips = outputs
         # true_state_snips: [episode_id, time_stamps, ...]
         self.fs.max_pc = true_state_snips[:, :, self.indxs.indx_m['pc']+2].max()
         self.fs.min_pc = true_state_snips[:, :, self.indxs.indx_m['pc']+2].min()
 
-        for split_i in range(6):
+        for split_i in range(self.splits_n):
         # get action plans for this scene
             states = test_data[0][[split_i], :, :]
             conds = [item[[split_i], :, :] for item in test_data[1]]
@@ -262,18 +262,20 @@ class MCEVAL():
             model_config = self.read_model_config(model_name)
             if self.is_eval_complete(model_name):
                 print('Oops - this model is already evaluated.')
-
                 continue
             self.policy.load_model(model_config, epoch=20)
 
-            episode_ids = [129]
+            episode_ids = self.data_obj.load_test_episode_ids('')
+            i = self.episode_in_prog
             while self.episode_in_prog < self.target_episode_count:
                 true_collection, pred_collection = self.run_episode(\
-                                                episode_ids[self.episode_in_prog])
+                                                episode_ids[i])
 
-                self.true_collections.extend(true_collection)
-                self.pred_collections.extend(pred_collection)
-                self.episode_in_prog += 1
+                if true_collection:
+                    self.true_collections.extend(true_collection)
+                    self.pred_collections.extend(pred_collection)
+                    self.episode_in_prog += 1
 
-                self.dump_mc_logs(model_name)
-                self.update_eval_config(model_name)
+                    self.dump_mc_logs(model_name)
+                    self.update_eval_config(model_name)
+                i += 1

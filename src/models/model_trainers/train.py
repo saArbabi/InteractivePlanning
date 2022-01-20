@@ -15,10 +15,6 @@ from data.preprocessing.data_obj import DataObj
 print(os.getcwd())
 import time
 
-
-# %%
-
-
 # %%
 """
 Load data
@@ -31,8 +27,8 @@ config = {
 
 },
 "data_config": {"obs_n": 20,
-                "pred_step_n": 7,
-                "step_size": 3,
+                "pred_step_n": 5,
+                "step_size": 4,
                 "Note": ""
 },
 "model_name": "NA",
@@ -143,7 +139,7 @@ class Trainer():
 
 tf.random.set_seed(2021)
 model_trainer = Trainer()
-model_name = 'cae_'+'003'
+model_name = 'cae_'+'004'
 model_trainer.exp_dir = './src/models/experiments/'+model_name
 config['model_name'] = model_name
 # model_trainer.train(train_input, val_input, epochs=1)
