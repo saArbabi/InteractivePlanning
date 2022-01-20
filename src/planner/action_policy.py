@@ -22,14 +22,10 @@ class Policy():
         self.pred_h = 20 # steps with 0.1 step size
         self.indxs = StateIndxs()
 
-    def load_model(self, model_name, epoch):
+    def load_model(self, config, epoch):
         data_configs_path = './src/datasets/preprocessed/'
-        exp_dir = './src/models/experiments/'+model_name
+        exp_dir = './src/models/experiments/'+config['model_name']
         exp_path = f'{exp_dir}/model_epo{epoch}'
-        with open(exp_dir+'/'+'config.json', 'rb') as handle:
-            config = json.load(handle)
-            data_config = config['data_config']
-
 
         with open('./src/datasets/'+'action_scaler', 'rb') as f:
             self.action_scaler = pickle.load(f)

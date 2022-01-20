@@ -19,23 +19,16 @@ data_obj = EvalDataObj()
 states_arr, targets_arr = data_obj.load_val_data()
 # %%
 """
-Load config
-"""
-model_name = 'cae_003'
-exp_dir = './src/models/experiments/'+model_name
-with open(exp_dir+'/'+'config.json', 'rb') as handle:
-    config = json.load(handle)
-
-"""
 Load evaluation object (This is needed for prepping test data )
 """
 from src.evaluation import eval_obj
 reload(eval_obj)
 from src.evaluation.eval_obj import MCEVAL
+
+
+model_name = 'cae_003'
 eval_obj = MCEVAL()
-eval_obj.obs_n = config['data_config']['obs_n']
-eval_obj.step_size = config['data_config']['step_size']
-eval_obj.pred_step_n = np.ceil(20/eval_obj.step_size).astype('int')
+config = eval_obj.read_model_config(model_name)
 eval_obj.states_arr = states_arr
 eval_obj.targets_arr = targets_arr
 # %%
@@ -47,7 +40,7 @@ reload(action_policy)
 from src.planner.action_policy import Policy
 policy = Policy()
 epoch = 20
-policy.load_model(model_name, epoch)
+policy.load_model(config, epoch)
 eval_obj.policy = policy
 
 episode_id = 129
@@ -58,27 +51,6 @@ true_collection.shape
 true_collection[:, :, 19:, :].shape
 # %%
 
-true_collection[0, 0, 19:, indx_acts[0][0]+2]
-true_collection[0, 0, 19:, indx_acts[0][1]+2]
-pred_collection[0, 0, :, indx_acts[0][0]][::3]
-
-
-pred_collection[0, 0, :, 2:3]
-pred_collection[0, 0, :, 2:4]
-pred_collection[0, 0, :, 3]
-pred_collection[0, 0, :, [2, 1]]
-pred_collection[0, 0, :, [2, 3]]
-pred_collection[0, 0, :, [2, 3, 4]].shape
-pred_collection[0, :, :, [2, 3]].shape
-pred_collection[0, :, :, 2: 4].shape
-pred_collection[0, [1], :, 2: 4].shape
-pred_collection[0, :, :, [2]].shape
-pred_collection[0, :, :, [2]].shape
-
-(true_collection[0, 0, 19, 4]-true_collection[0, 0, 18, 4])/0.1
-(true_collection[0, 0, 19, 5]-true_collection[0, 0, 18, 5])/0.1
-(true_collection[0, 0, 19, 9]-true_collection[0, 0, 18, 9])/0.1
-(pred_collection[0, 0, 1, 7]-pred_collection[0, 0, 0, 7])/0.1
 
 
 # %%

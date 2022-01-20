@@ -48,13 +48,14 @@ from src.evaluation.eval_data_obj import EvalDataObj
 
 class MCEVAL():
     eval_config_dir = './src/evaluation/models_eval/config.json'
-    def __init__(self):
+    def __init__(self, val_run_name=None):
         self.collections = {} # collection of mc visited states
         self.fs = ForwardSim()
         self.indxs = StateIndxs()
         self.data_obj = EvalDataObj()
         self.config = self.read_eval_config()
         self.traces_n = self.config['mc_config']['traces_n']
+        self.val_run_name = val_run_name
         self.loadScalers() # will set the scaler attributes
 
     def loadScalers(self):
@@ -66,6 +67,16 @@ class MCEVAL():
     def read_eval_config(self):
         with open(self.eval_config_dir, 'rb') as handle:
             config = json.load(handle)
+        return config
+
+    def read_model_config(self, model_name):
+        exp_dir = './src/models/experiments/'+model_name
+        with open(exp_dir+'/'+'config.json', 'rb') as handle:
+            config = json.load(handle)
+
+        self.obs_n = config['data_config']['obs_n']
+        self.step_size = config['data_config']['step_size']
+        self.pred_step_n = np.ceil(20/self.step_size).astype('int')
         return config
 
     def update_eval_config(self, model_name):
@@ -88,7 +99,7 @@ class MCEVAL():
             json.dump(self.config, f, ensure_ascii=False, indent=4)
 
     def dump_mc_logs(self, model_name):
-        exp_dir = './src/models/experiments/'+model_name+'/eval'
+        exp_dir = './src/models/experiments/'+model_name+'/'+self.val_run_name
         if not os.path.exists(exp_dir):
             os.makedirs(exp_dir)
 
@@ -109,7 +120,7 @@ class MCEVAL():
         self.config['progress_logging'][model_name] = progress_logging
 
     def load_collections(self, model_name):
-        exp_dir = './src/models/experiments/'+model_name+'/eval'
+        exp_dir = './src/models/experiments/'+model_name+'/'+self.val_run_name
         with open(exp_dir+'/true_collections.pickle', 'rb') as handle:
             self.true_collections = pickle.load(handle)
 
@@ -245,14 +256,14 @@ class MCEVAL():
         self.model_map = self.config['model_map']
         model_names = self.model_map.keys()
         self.states_arr, self.targets_arr = self.data_obj.load_val_data()
-
         for model_name in model_names:
+            model_config = self.read_model_config(model_name)
             if self.is_eval_complete(model_name):
                 continue
-            self.policy.load_model(model_name)
+            self.policy.load_model(model_config, epoch=20)
             print('Model being evaluated: ', model_name)
-            episode_ids = [129]
 
+            episode_ids = [129]
             while self.episode_in_prog < self.target_episode_count:
                 true_collection, pred_collection = self.run_episode(\
                                                 episode_ids[self.episode_in_prog])
