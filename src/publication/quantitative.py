@@ -4,8 +4,8 @@ import matplotlib.pyplot as plt
 import numpy as np
 np.set_printoptions(suppress=True)
 
-model_names = ['cae_003']
-val_run_name = 'eval'
+model_names = ['cae_001', 'cae_002', 'cae_003']
+val_run_name = 'test_2'
 
 true_collections = {}
 pred_collections = {}
@@ -22,8 +22,8 @@ true_collections[model_name].shape
 pred_collections[model_name].shape
 # %%
 true_collections[model_name][0, :, 19:, 0+2]-pred_collections[model_name][0, :, :, 0]
-pred_collections[model_name][0, :, :, 0].shape
-
+pred_collections[model_name][0, 0, :, 0]
+true_collections[model_name]
 # %%
 
 def get_trace_err(pred_traces, true_trace):
@@ -53,21 +53,12 @@ def get_rwse(vehs_err_arr):
 
 
 # %%
-index = 0
-m = 0
-
-true_trace = true_collections[model_name][m, 0, :, index+2]
-plt.plot(true_trace)
-
-for i in range(3):
-pred_collections[model_name][0, :, :, 0].shape
 
 
-#\ %%
+# %%
 
 
-time_steps = np.linspace(0, 2.1, 22)
-
+time_steps = np.linspace(0, 2., 21)
 fig = plt.figure(figsize=(6, 4))
 position_axis = fig.add_subplot(211)
 speed_axis = fig.add_subplot(212)
@@ -77,11 +68,11 @@ fig.subplots_adjust(hspace=0.1)
 for model_name in model_names:
     vehs_err_arr = get_veh_err(0, model_name)
     error_total = get_rwse(vehs_err_arr)
-    speed_axis.plot(time_steps, error_total)
+    speed_axis.plot(time_steps, error_total, label=model_name)
 error_total.shape
 speed_axis.set_ylabel('RWSE speed ($ms^{-1}$)')
 speed_axis.set_xlabel('Time horizon (s)')
 speed_axis.minorticks_off()
 # speed_axis.set_ylim(0, 2)
-speed_axis.set_yticks([0, 1, 2, 3])
-# speed_axis.legend(loc='upper center', bbox_to_anchor=(0.5, -.2), ncol=5)
+# speed_axis.set_yticks([0, 1, 2, 3])
+speed_axis.legend(loc='upper center', bbox_to_anchor=(0.5, -.2), ncol=5)

@@ -8,10 +8,10 @@ import dill
 from collections import deque
 from scipy.interpolate import CubicSpline
 import time
-from src.planner.state_indexs import StateIndxs
+from planner.state_indexs import StateIndxs
 import sys
 sys.path.insert(0, './src')
-from src.evaluation.eval_data_obj import EvalDataObj
+from evaluation.eval_data_obj import EvalDataObj
 
 class Policy():
     STEP_SIZE = 0.1

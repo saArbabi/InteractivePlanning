@@ -1,12 +1,12 @@
 import sys
 sys.path.insert(0, './src')
-from models.evaluation.eval_obj import MCEVAL
-from src.planner.action_policy import Policy
+from evaluation.eval_obj import MCEVAL
+from planner.action_policy import Policy
 
-val_run_name = 'test_1'
+val_run_name = 'test_2'
 def main():
     eval_obj = MCEVAL(val_run_name)
-    eval_obj
+    eval_obj.policy = Policy()
     eval_obj.run()
 
 if __name__=='__main__':

@@ -29,10 +29,16 @@ Note: random seeds are set to ensure repeatable MC runs.
 
 """
 
+import os
+print(os.getcwd())
+# from planner import forward_sim
+# reload(forward_sim)
+from planner.forward_sim import ForwardSim
+from planner.state_indexs import StateIndxs
+from evaluation.eval_data_obj import EvalDataObj
 import tensorflow as tf
 import time
 from datetime import datetime
-import os
 import numpy as np
 import pickle
 import dill
@@ -40,11 +46,6 @@ from collections import deque
 from importlib import reload
 import matplotlib.pyplot as plt
 import json
-from src.planner import forward_sim
-reload(forward_sim)
-from src.planner.forward_sim import ForwardSim
-from src.planner.state_indexs import StateIndxs
-from src.evaluation.eval_data_obj import EvalDataObj
 
 class MCEVAL():
     eval_config_dir = './src/evaluation/models_eval/config.json'
@@ -245,7 +246,7 @@ class MCEVAL():
 
             bc_ders = self.policy.get_boundary_condition(true_trace_history)
             action_plans = self.policy.construct_policy(gen_actions, bc_ders)
-            state0 = true_trace_history[:, -1, 2:]
+            state0 = true_trace_history[:, -1, :]
             pred_trace = self.fs.forward_sim(state0, action_plans)
             pred_collection.append(pred_trace)
             true_collection.append(true_trace)
@@ -257,11 +258,13 @@ class MCEVAL():
         model_names = self.model_map.keys()
         self.states_arr, self.targets_arr = self.data_obj.load_val_data()
         for model_name in model_names:
+            print('Model being evaluated: ', model_name)
             model_config = self.read_model_config(model_name)
             if self.is_eval_complete(model_name):
+                print('Oops - this model is already evaluated.')
+
                 continue
             self.policy.load_model(model_config, epoch=20)
-            print('Model being evaluated: ', model_name)
 
             episode_ids = [129]
             while self.episode_in_prog < self.target_episode_count:

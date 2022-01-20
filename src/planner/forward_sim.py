@@ -1,5 +1,5 @@
 import numpy as np
-from src.planner.state_indexs import StateIndxs
+from planner.state_indexs import StateIndxs
 
 class ForwardSim():
     STEP_SIZE = 0.1

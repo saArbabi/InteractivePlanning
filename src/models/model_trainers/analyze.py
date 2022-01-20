@@ -35,7 +35,7 @@ eval_obj.targets_arr = targets_arr
 """
 Load policy
 """
-from src.planner import action_policy
+from planner import action_policy
 reload(action_policy)
 from src.planner.action_policy import Policy
 policy = Policy()
