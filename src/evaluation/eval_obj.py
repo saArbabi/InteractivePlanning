@@ -220,33 +220,46 @@ class MCEVALMultiStep():
 
         bc_ders = self.policy.get_boundary_condition(true_trace_history)
         action_plans = self.policy.construct_policy(gen_actions, bc_ders, self.traces_n)
-        state0 = true_trace_history[:, -1, :]
-        pred_trace = self.fs.forward_sim(state0, action_plans)
+        state_0 = true_trace_history[:, -1, :]
+        pred_trace = self.fs.forward_sim(state_0, action_plans)
         return pred_trace
+
+    def load_policy(self, model_name):
+        model_config = self.read_model_config(model_name)
+        model_type, epoch = self.config['model_map'][model_name]
+        if model_type == 'CAE':
+            from planner.action_policy import Policy
+            self.policy = Policy()
+
+        if model_type == 'MLP':
+            exp_dir = './src/models/experiments/'+model_name
+            exp_path = f'{exp_dir}/model_epo{epoch}'
+
+            from models.core.mlp import MLP
+            self.policy = MLP(model_config)
+            self.policy.load_weights(exp_path).expect_partial()
 
     def run(self):
         model_names = self.config['model_map'].keys()
         self.states_arr, self.targets_arr = self.data_obj.load_val_data()
         for model_name in model_names:
             print('Model being evaluated: ', model_name)
-            model_config = self.read_model_config(model_name)
             if self.is_eval_complete(model_name):
                 print('Oops - this model is already evaluated.')
                 continue
-            epoch = self.config['model_map'][model_name][-1]
-            self.policy.load_model(model_config, epoch=epoch)
+            else:
+                self.load_policy(model_name)
+                episode_ids = self.data_obj.load_test_episode_ids('')
+                i = self.episode_in_prog
+                while self.episode_in_prog < self.target_episode_count:
+                    true_collection, pred_collection = self.run_episode(\
+                                                    episode_ids[i])
 
-            episode_ids = self.data_obj.load_test_episode_ids('')
-            i = self.episode_in_prog
-            while self.episode_in_prog < self.target_episode_count:
-                true_collection, pred_collection = self.run_episode(\
-                                                episode_ids[i])
+                    if true_collection:
+                        self.true_collections.extend(true_collection)
+                        self.pred_collections.extend(pred_collection)
+                        self.episode_in_prog += 1
 
-                if true_collection:
-                    self.true_collections.extend(true_collection)
-                    self.pred_collections.extend(pred_collection)
-                    self.episode_in_prog += 1
-
-                    self.dump_mc_logs(model_name)
-                    self.update_eval_config(model_name)
-                i += 1
+                        self.dump_mc_logs(model_name)
+                        self.update_eval_config(model_name)
+                    i += 1

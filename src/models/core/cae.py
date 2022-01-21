@@ -211,8 +211,6 @@ class FutureDecoder(tf.keras.Model):
         # tf.print(tf.shape(gmm_params))
         # tf.print(tf.reduce_min(tf.abs(gmm_params)))
         # tf.debugging.check_numerics(gmm_params, message='Checking gmm_params')
-
-
         alphas, rhos, mus_lon, sigmas_lon, mus_lat, sigmas_lat = \
                                                 tf.split(gmm_params, 6, axis=2)
 

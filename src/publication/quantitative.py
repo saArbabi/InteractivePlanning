@@ -10,7 +10,9 @@ np.set_printoptions(suppress=True)
 """Compare different models
 """
 model_names = ['cae_001', 'cae_002', 'cae_003', 'cae_004']
-config_name = 'study_step_size'
+# config_name = 'study_step_size'
+model_names = ['mlp_001']
+config_name = 'test'
 val_run_name = config_name
 
 true_collections = {}
@@ -46,13 +48,20 @@ for val_run_name in model_names:
 
 true_collections[val_run_name].shape
 pred_collections[val_run_name].shape
+pred_trace =
+true_collection[scene_sample, 0, 19:, indx_acts[0][0]+2]
+pred_collection[0, 0, :, indx_acts[0][0]]
+true_collection[scene_sample, 0, 19:, indx_acts[0][1]+2]
+pred_collection[0, 0, :, indx_acts[0][1]]
+
 
 # %%
 """
 Visualisation of model predictions. Use this for debugging.
 """
 model_name = 'cae_004'
-model_name = 'epoch_30'
+model_name = 'mlp_001'
+# model_name = 'epoch_30'
 epoch = 20
 
 true_collection = true_collections[model_name]
@@ -62,11 +71,12 @@ indx_acts = indxs.indx_acts
 traces_n = 10
 time_steps = np.linspace(0, 3.9, 40)
 veh_names = ['veh_m', 'veh_y', 'veh_f', 'veh_fadj']
-# scene_samples = range(2)
-scene_samples = [20]
+scene_samples = range(6)
+# scene_samples = [2]
 for scene_sample in scene_samples:
     fig, axs = plt.subplots(figsize=(10, 1))
     start_time = true_collection[scene_sample, 0, 0, 1]
+    true_collection[scene_sample, 0, 0, :]
     plt.text(0.1, 0.1,
              'model_name: '+model_name+'\n'
              'start_time: '+str(start_time)+'\n'
@@ -109,11 +119,11 @@ def get_scenario_err(index_name, model_name):
     """
     posx_true = true_collections[model_name][:,:,19:, indxs.indx_m[index_name]+2]
     posx_pred = pred_collections[model_name][:,:,:, indxs.indx_m[index_name]]
-    for indx_ in [indxs.indx_y, indxs.indx_f, indxs.indx_fadj]:
-        posx_true = np.append(posx_true, \
-                true_collections[model_name][:,:,19:, indx_[index_name]+2], axis=0)
-        posx_pred = np.append(posx_pred, \
-                pred_collections[model_name][:,:,:, indx_[index_name]], axis=0)
+    # for indx_ in [indxs.indx_y, indxs.indx_f, indxs.indx_fadj]:
+    #     posx_true = np.append(posx_true, \
+    #             true_collections[model_name][:,:,19:, indx_[index_name]+2], axis=0)
+    #     posx_pred = np.append(posx_pred, \
+    #             pred_collections[model_name][:,:,:, indx_[index_name]], axis=0)
 
     scenario_err_arr = []
     for m in range(posx_true.shape[0]):
