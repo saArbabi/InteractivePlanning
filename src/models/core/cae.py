@@ -205,7 +205,7 @@ class FutureDecoder(tf.keras.Model):
         return tf.reshape(action, [batch_size, 1, 1]), tf.reshape(likelihood, [batch_size, 1, 1])
 
     def sample_action(self, gmm):
-        return tf.squeeze(gmm.sample(1), axis=0)
+        return tf.clip_by_value(tf.squeeze(gmm.sample(1), axis=0), -5, 5)
 
     def get_pdf(self, gmm_params):
         # tf.print(tf.shape(gmm_params))
@@ -388,9 +388,6 @@ class FutureDecoder(tf.keras.Model):
                     act_f = cond_f[:, step:step+1, :]
                     act_fadj = cond_fadj[:, step:step+1, :]
 
-                step_cond_f = act_f
-                step_cond_fadj = act_fadj
-
                 step_cond_m = self.axis2_conc([act_m,
                                                     act_y,
                                                     act_f,
@@ -399,6 +396,9 @@ class FutureDecoder(tf.keras.Model):
                 step_cond_y = self.axis2_conc([act_m,
                                                 act_y,
                                                 act_fadj])
+
+                step_cond_f = act_f
+                step_cond_fadj = act_fadj
 
                 """Merger vehicle
                 """

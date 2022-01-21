@@ -84,7 +84,7 @@ class Policy():
             bc_ders.append(bc_der)
         return bc_ders
 
-    def construct_policy(self, gen_actions, bc_ders):
+    def construct_policy(self, gen_actions, bc_ders, traj_n):
         """Spline interpolation to turn action sequences into continuous plans.
         """
         if self.step_size == 1:
@@ -97,7 +97,7 @@ class Policy():
         vehicle_plans = [] # action plans for all the vehicles
         for gen_action, bc_der in zip(gen_actions, bc_ders):
             f = CubicSpline(time_coarse, gen_action[:, :, :],
-                                bc_type=((1, bc_der), (2, np.zeros([20, 2]))),
+                                bc_type=((1, bc_der), (2, np.zeros([traj_n, 2]))),
                                 axis=1)
             # f = CubicSpline(time_coarse, gen_action[:, :, :], axis=1)
 

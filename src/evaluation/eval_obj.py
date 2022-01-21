@@ -47,15 +47,11 @@ import matplotlib.pyplot as plt
 import json
 
 class MCEVAL():
-    eval_config_dir = './src/evaluation/models_eval/config.json'
     def __init__(self, val_run_name=None):
         self.collections = {} # collection of mc visited states
         self.fs = ForwardSim()
         self.indxs = StateIndxs()
         self.data_obj = EvalDataObj()
-        self.config = self.read_eval_config()
-        self.traces_n = self.config['mc_config']['traces_n']
-        self.splits_n = self.config['mc_config']['splits_n']
         self.val_run_name = val_run_name
         self.loadScalers() # will set the scaler attributes
 
@@ -65,10 +61,12 @@ class MCEVAL():
         with open('./src/datasets/'+'action_scaler', 'rb') as f:
             self.action_scaler = pickle.load(f)
 
-    def read_eval_config(self):
+    def read_eval_config(self, config_name):
+        self.eval_config_dir = './src/evaluation/models_eval/'+ config_name +'.json'
         with open(self.eval_config_dir, 'rb') as handle:
-            config = json.load(handle)
-        return config
+            self.config = json.load(handle)
+        self.traces_n = self.config['mc_config']['traces_n']
+        self.splits_n = self.config['mc_config']['splits_n']
 
     def read_model_config(self, model_name):
         exp_dir = './src/models/experiments/'+model_name
@@ -245,7 +243,7 @@ class MCEVAL():
                                 [states, conds], traj_n=self.traces_n)
 
             bc_ders = self.policy.get_boundary_condition(true_trace_history)
-            action_plans = self.policy.construct_policy(gen_actions, bc_ders)
+            action_plans = self.policy.construct_policy(gen_actions, bc_ders, self.traces_n)
             state0 = true_trace_history[:, -1, :]
             pred_trace = self.fs.forward_sim(state0, action_plans)
             pred_collection.append(pred_trace)
@@ -254,8 +252,7 @@ class MCEVAL():
         return true_collection, pred_collection
 
     def run(self):
-        self.model_map = self.config['model_map']
-        model_names = self.model_map.keys()
+        model_names = self.config['model_map'].keys()
         self.states_arr, self.targets_arr = self.data_obj.load_val_data()
         for model_name in model_names:
             print('Model being evaluated: ', model_name)
@@ -263,7 +260,8 @@ class MCEVAL():
             if self.is_eval_complete(model_name):
                 print('Oops - this model is already evaluated.')
                 continue
-            self.policy.load_model(model_config, epoch=20)
+            epoch = self.config['model_map'][model_name][-1]
+            self.policy.load_model(model_config, epoch=epoch)
 
             episode_ids = self.data_obj.load_test_episode_ids('')
             i = self.episode_in_prog

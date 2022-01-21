@@ -27,8 +27,8 @@ config = {
 
 },
 "data_config": {"obs_n": 20,
-                "pred_step_n": 5,
-                "step_size": 4,
+                "pred_step_n": 7,
+                "step_size": 3,
                 "Note": ""
 },
 "model_name": "NA",
@@ -70,6 +70,7 @@ class Trainer():
         self.model = CAE(config, model_use='training')
 
     def load_pre_trained(self, epoch_count):
+        print('Make sure the data corresponding to this model is loaded')
         exp_dir = self.exp_dir+'/model_epo'+epoch_count
         self.epoch_count = int(epoch_count)
         self.model.load_weights(exp_dir).expect_partial()
@@ -139,20 +140,21 @@ class Trainer():
 
 tf.random.set_seed(2021)
 model_trainer = Trainer()
-model_name = 'cae_'+'004'
+model_name = 'cae_'+'003'
 model_trainer.exp_dir = './src/models/experiments/'+model_name
 config['model_name'] = model_name
 # model_trainer.train(train_input, val_input, epochs=1)
-# model_trainer.load_pre_trained(epoch_count='20')
+model_trainer.load_pre_trained(epoch_count='20')
 # %%
 ################## Train ##################
 ################## ##### ##################
 ################## ##### ##################
 ################## ##### ##################
-model_trainer.train(train_input, val_input, epochs=20)
+model_trainer.train(train_input, val_input, epochs=10)
 ################## ##### ##################
 ################## ##### ##################
 ################## ##### ##################
+
 
 # %%
 """
