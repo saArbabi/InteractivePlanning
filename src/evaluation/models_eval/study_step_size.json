@@ -1,15 +1,44 @@
 {
-    "status": "NOT STARTED",
+    "status": "COMPLETE",
     "model_map": {
-        "cae_001": ["CAE", 20],
-        "cae_002": ["CAE", 20],
-        "cae_003": ["CAE", 20],
-        "cae_004": ["CAE", 50]
+        "cae_001": [
+            "CAE",
+            20
+        ],
+        "cae_002": [
+            "CAE",
+            20
+        ],
+        "cae_003": [
+            "CAE",
+            50
+        ],
+        "cae_004": [
+            "CAE",
+            50
+        ]
     },
     "mc_config": {
-        "episodes_n": 10,
+        "episodes_n": 100,
         "traces_n": 50,
         "splits_n": 3
     },
-    "progress_logging": {}
+    "progress_logging": {
+        "cae_001": {
+            "episode_in_prog": "100/100",
+            "last_update": "21/01/2022 11:07:14"
+        },
+        "cae_002": {
+            "episode_in_prog": "100/100",
+            "last_update": "21/01/2022 11:09:11"
+        },
+        "cae_003": {
+            "episode_in_prog": "100/100",
+            "last_update": "21/01/2022 11:10:37"
+        },
+        "cae_004": {
+            "episode_in_prog": "100/100",
+            "last_update": "21/01/2022 11:11:42"
+        }
+    }
 }

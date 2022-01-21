@@ -1,34 +1,3 @@
-
-
-"""
-This class uses the test dataset and MC technique for model evaluation.
-Steps for MC evaluation a given model is as follows:
-() read the eval_config file. This determines what mc experiments need to be run for
-which model.
-(1) load the testset for a given traffic desity. EvalDataObj contains the test data.
-() divide the testset into snippets: past states and future states
-() scale and then feed the testset to the model to compute actions
-() turn the plans to states of interest (forward_sim)
-() dump collected states for all the vehicels of interest in their respective model folders.
-    depending on the model, different rwse metrics are collected
-() you can now compute rwse for different models in ./publication/quantitative
-
-
-    - rwse
-        - high denstiy
-            - veh_m
-                - long. speed
-                - lat. speed
-            - veh_y
-            - veh_f
-            - veh_fadj
-        - medium denstiy
-        - random denstiy (for evaluating influence of sequence length and step size )
-
-Note: random seeds are set to ensure repeatable MC runs.
-
-"""
-
 import os
 # from planner import forward_sim
 # reload(forward_sim)
@@ -46,7 +15,7 @@ from importlib import reload
 import matplotlib.pyplot as plt
 import json
 
-class MCEVAL():
+class MCEVALMultiStep():
     def __init__(self, val_run_name=None):
         self.collections = {} # collection of mc visited states
         self.fs = ForwardSim()
@@ -236,20 +205,24 @@ class MCEVAL():
             states = test_data[0][[split_i], :, :]
             conds = [item[[split_i], :, :] for item in test_data[1]]
             true_trace = true_state_snips[[split_i], :, :]
-            true_trace_history = np.repeat(\
-                    true_trace[:, :self.obs_n-1, 2:], self.traces_n, axis=0)
-
-            gen_actions = self.policy.gen_action_seq(\
-                                [states, conds], traj_n=self.traces_n)
-
-            bc_ders = self.policy.get_boundary_condition(true_trace_history)
-            action_plans = self.policy.construct_policy(gen_actions, bc_ders, self.traces_n)
-            state0 = true_trace_history[:, -1, :]
-            pred_trace = self.fs.forward_sim(state0, action_plans)
+            pred_trace = self.get_predicted_trace(states, conds, true_trace)
             pred_collection.append(pred_trace)
             true_collection.append(true_trace)
 
         return true_collection, pred_collection
+
+    def get_predicted_trace(self, states, conds, true_trace):
+        true_trace_history = np.repeat(\
+                true_trace[:, :self.obs_n-1, 2:], self.traces_n, axis=0)
+
+        gen_actions = self.policy.gen_action_seq(\
+                            [states, conds], traj_n=self.traces_n)
+
+        bc_ders = self.policy.get_boundary_condition(true_trace_history)
+        action_plans = self.policy.construct_policy(gen_actions, bc_ders, self.traces_n)
+        state0 = true_trace_history[:, -1, :]
+        pred_trace = self.fs.forward_sim(state0, action_plans)
+        return pred_trace
 
     def run(self):
         model_names = self.config['model_map'].keys()

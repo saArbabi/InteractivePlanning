@@ -3,3 +3,34 @@ in the model folder.
 
 2- planner is only evaluated qualitatively. The env.py module is used for
 ..
+
+
+
+"""
+This class uses the test dataset and MC technique for model evaluation.
+Steps for MC evaluation a given model is as follows:
+() read the eval_config file. This determines what mc experiments need to be run for
+which model.
+(1) load the testset for a given traffic desity. EvalDataObj contains the test data.
+() divide the testset into snippets: past states and future states
+() scale and then feed the testset to the model to compute actions
+() turn the plans to states of interest (forward_sim)
+() dump collected states for all the vehicels of interest in their respective model folders.
+    depending on the model, different rwse metrics are collected
+() you can now compute rwse for different models in ./publication/quantitative
+
+
+    - rwse
+        - high denstiy
+            - veh_m
+                - long. speed
+                - lat. speed
+            - veh_y
+            - veh_f
+            - veh_fadj
+        - medium denstiy
+        - random denstiy (for evaluating influence of sequence length and step size )
+
+Note: random seeds are set to ensure repeatable MC runs.
+
+"""

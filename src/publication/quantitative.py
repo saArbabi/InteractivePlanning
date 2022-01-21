@@ -115,7 +115,7 @@ def get_scenario_err(index_name, model_name):
         posx_pred = np.append(posx_pred, \
                 pred_collections[model_name][:,:,:, indx_[index_name]], axis=0)
 
-    scenario_err_arr = []§
+    scenario_err_arr = []
     for m in range(posx_true.shape[0]):
         scenario_err_arr.append(get_trace_err(posx_pred[m, :, :], posx_true[m, :, :]))
     return np.array(scenario_err_arr)
