@@ -55,14 +55,23 @@ class ForwardSimSingleStep():
         state_t_ii[:, self.indxs.indx_fadj['dx']] = next_dx
 
 class MCEVALSingleStep(MCEVALMultiStep):
-    def __init__(self, val_run_name=None):
+    def __init__(self, model_type, val_run_name=None):
         super().__init__(val_run_name)
         self.fs = ForwardSimSingleStep()
         self.pred_h = 20 # steps with 0.1 step size
+        self.model_type = model_type
 
     def scale_state(self, state_t):
         state_t = state_t.copy()
-        state_t[:, :-4] = self.state_scaler.transform(state_t[:, :-4])
+        state_dims = state_t.shape
+        if len(state_dims) == 2:
+            state_t[:, :-4] = self.state_scaler.transform(state_t[:, :-4])
+
+        elif len(state_dims) == 3:
+            state_t.shape = (state_dims[0]*self.obs_n, state_dims[-1])
+            state_t[:, :-4] = self.state_scaler.transform(state_t[:, :-4])
+            state_t.shape = (state_dims[0], self.obs_n, state_dims[-1])
+
         return state_t
 
     def inverse_transform_actions(self, _gen_actions):
@@ -71,12 +80,25 @@ class MCEVALSingleStep(MCEVALMultiStep):
         return _gen_actions[:, :2]
 
     def get_predicted_trace(self, states, conds, true_trace):
-        state_0 = true_trace[:, self.obs_n-1, 2:]
-        pred_trace = np.repeat(\
-                true_trace[:, self.obs_n-1:, 2:], self.traces_n, axis=0)
+        if self.model_type == 'MLP':
+            pred_trace = np.repeat(\
+                    true_trace[:, self.obs_n-1:, 2:], self.traces_n, axis=0)
 
-        for step in range(self.pred_h):
-            gmm_m = self.policy(self.scale_state(pred_trace[:, step, :]))
-            act_m = self.inverse_transform_actions(gmm_m.sample().numpy())
-            self.fs.step(pred_trace[:, step, :], pred_trace[:, step+1, :], act_m)
+            for step in range(self.pred_h):
+                gmm_m = self.policy(self.scale_state(pred_trace[:, step, :]))
+                act_m = self.inverse_transform_actions(gmm_m.sample().numpy())
+                self.fs.step(pred_trace[:, step, :], pred_trace[:, step+1, :], act_m)
+
+        elif self.model_type == 'LSTM':
+            true_trace = np.repeat(true_trace[:, :, 2:], self.traces_n, axis=0)
+            pred_trace = true_trace[:, self.obs_n-1:, :]
+            state_history = self.scale_state(true_trace[:, :self.obs_n, :])
+
+            for step in range(self.pred_h):
+                gmm_m = self.policy(state_history)
+                act_m = self.inverse_transform_actions(gmm_m.sample().numpy())
+                self.fs.step(pred_trace[:, step, :], pred_trace[:, step+1, :], act_m)
+                state_history[:, :-1, :] = state_history[:, 1:, :]
+                state_history[:, -1, :] = self.scale_state(pred_trace[:, step+1, :])
+
         return pred_trace

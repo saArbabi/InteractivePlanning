@@ -46,22 +46,10 @@ train_input, val_input = data_objs[0:3], data_objs[3:]
 # train_input[2][7][0][0, 0, :]
 train_input[0][1][0, 0, :].shape
 # train_input[1][7][0][0, 0, :]
-a = np.ones([3, 2])
-a
-def change(a):
-    a[:, 0] += 2
 
-a  = np.repeat(a, 2, axis = 1)
-a[:, 0] = change(a[:, 0])
-change(a)
-a[:, 0] = 2
-np.zeros([3, 1])
-a.shape
-a
-np.insert(a, 2, np.zeros([2, 1]), axis=1)
 # %%
 class Trainer():
-    def __init__(self):
+    def __init__(self, model_type):
         self.train_losses = {
             'train_llloss_m': []}
 
@@ -69,13 +57,21 @@ class Trainer():
             'test_llloss_m': []}
 
         self.epoch_count = 0
+        self.model_type = model_type
         self.initiate_model()
 
     def initiate_model(self):
-        from models.core import mlp
-        reload(mlp)
-        from models.core.mlp import MLP
-        self.model = MLP(config)
+        if self.model_type == 'mlp':
+            from models.core import mlp
+            reload(mlp)
+            from models.core.mlp import MLP
+            self.model = MLP(config)
+
+        if self.model_type == 'lstm':
+            from models.core import lstm
+            reload(lstm)
+            from models.core.lstm import LSTMEncoder
+            self.model = LSTMEncoder(config)
 
     def load_pre_trained(self, epoch_count):
         print('Make sure the data corresponding to this model is loaded')
@@ -133,9 +129,9 @@ class Trainer():
 
 
 tf.random.set_seed(2021)
-model_trainer = Trainer()
-model_name = 'mlp_'+'001'
-model_trainer.model_type = 'mlp'
+model_name = 'lstm_'+'001'
+model_type = 'lstm'
+model_trainer = Trainer(model_type)
 model_trainer.exp_dir = './src/models/experiments/'+model_name
 config['model_name'] = model_name
 # model_trainer.train(train_input, val_input, epochs=1)
@@ -158,7 +154,7 @@ if model_trainer.model_type == 'lstm':
 ################## ##### ##################
 ################## ##### ##################
 ################## ##### ##################
-model_trainer.train(_train_input, _val_input, epochs=19)
+model_trainer.train(_train_input, _val_input, epochs=10)
 ################## ##### ##################
 ################## ##### ##################
 ################## ##### ##################

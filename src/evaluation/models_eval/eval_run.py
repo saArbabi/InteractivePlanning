@@ -2,7 +2,7 @@ import sys
 sys.path.insert(0, './src')
 
 # config_name = 'study_step_size'
-config_name = 'test'
+config_name = 'lstm_and_mlp'
 val_run_name = config_name
 model_type = 'CAE'
 model_type = 'MLP'
@@ -16,7 +16,7 @@ def main():
 
     if model_type == 'MLP' or model_type == 'LSTM':
         from evaluation.eval_obj_singlestep import MCEVALSingleStep
-        eval_obj = MCEVALSingleStep(val_run_name)
+        eval_obj = MCEVALSingleStep(model_type, val_run_name)
 
     eval_obj.read_eval_config(config_name)
     eval_obj.run()

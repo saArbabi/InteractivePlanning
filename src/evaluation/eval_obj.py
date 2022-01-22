@@ -239,6 +239,14 @@ class MCEVALMultiStep():
             self.policy = MLP(model_config)
             self.policy.load_weights(exp_path).expect_partial()
 
+        if model_type == 'LSTM':
+            exp_dir = './src/models/experiments/'+model_name
+            exp_path = f'{exp_dir}/model_epo{epoch}'
+
+            from models.core.lstm import LSTMEncoder
+            self.policy = LSTMEncoder(model_config)
+            self.policy.load_weights(exp_path).expect_partial()
+
     def run(self):
         model_names = self.config['model_map'].keys()
         self.states_arr, self.targets_arr = self.data_obj.load_val_data()

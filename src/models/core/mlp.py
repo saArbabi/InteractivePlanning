@@ -1,8 +1,5 @@
 from tensorflow.keras.layers import Dense, Concatenate
 from keras import backend as K
-from importlib import reload
-from models.core import abstract_model
-reload(abstract_model)
 from models.core.abstract_model import  AbstractModel
 import tensorflow as tf
 import tensorflow_probability as tfp
@@ -64,9 +61,6 @@ class MLP(AbstractModel):
             self.test_step(s, t)
 
     def get_pdf(self, gmm_params):
-        # tf.print(tf.shape(gmm_params))
-        # tf.print(tf.reduce_min(tf.abs(gmm_params)))
-        # tf.debugging.check_numerics(gmm_params, message='Checking gmm_params')
         alphas, rhos, mus_lon, sigmas_lon, mus_lat, sigmas_lat = \
                                                 tf.split(gmm_params, 6, axis=1)
 

@@ -11,7 +11,7 @@ np.set_printoptions(suppress=True)
 """
 model_names = ['cae_001', 'cae_002', 'cae_003', 'cae_004']
 # config_name = 'study_step_size'
-model_names = ['mlp_001']
+model_names = ['mlp_001', 'lstm_001']
 config_name = 'test'
 val_run_name = config_name
 
@@ -61,6 +61,7 @@ Visualisation of model predictions. Use this for debugging.
 """
 model_name = 'cae_004'
 model_name = 'mlp_001'
+model_name = 'lstm_001'
 # model_name = 'epoch_30'
 epoch = 20
 
@@ -71,7 +72,7 @@ indx_acts = indxs.indx_acts
 traces_n = 10
 time_steps = np.linspace(0, 3.9, 40)
 veh_names = ['veh_m', 'veh_y', 'veh_f', 'veh_fadj']
-scene_samples = range(6)
+scene_samples = range(3)
 # scene_samples = [2]
 for scene_sample in scene_samples:
     fig, axs = plt.subplots(figsize=(10, 1))
