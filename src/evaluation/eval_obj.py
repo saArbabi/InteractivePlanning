@@ -3,7 +3,6 @@ import os
 # reload(forward_sim)
 from planner.forward_sim import ForwardSim
 from planner.state_indexs import StateIndxs
-from evaluation.eval_data_obj import EvalDataObj
 import tensorflow as tf
 import time
 from datetime import datetime
@@ -15,25 +14,14 @@ from importlib import reload
 import matplotlib.pyplot as plt
 import json
 
+
 class MCEVALMultiStep():
-    def __init__(self, val_run_name=None):
+    def __init__(self, config, val_run_name=None):
         self.collections = {} # collection of mc visited states
         self.fs = ForwardSim()
         self.indxs = StateIndxs()
-        self.data_obj = EvalDataObj()
         self.val_run_name = val_run_name
-        self.loadScalers() # will set the scaler attributes
-
-    def loadScalers(self):
-        with open('./src/datasets/'+'state_scaler', 'rb') as f:
-            self.state_scaler = pickle.load(f)
-        with open('./src/datasets/'+'action_scaler', 'rb') as f:
-            self.action_scaler = pickle.load(f)
-
-    def read_eval_config(self, config_name):
-        self.eval_config_dir = './src/evaluation/models_eval/'+ config_name +'.json'
-        with open(self.eval_config_dir, 'rb') as handle:
-            self.config = json.load(handle)
+        self.config = config
         self.traces_n = self.config['mc_config']['traces_n']
         self.splits_n = self.config['mc_config']['splits_n']
 
@@ -127,33 +115,28 @@ class MCEVALMultiStep():
 
     def obsSequence(self, state_arr, target_arr):
         """
-        Rolling sequencing
+        Rolling sequencing. Adapted from the DataPrep class so that all test
+        scenarios have aligned initial state
+        (to ensure fair comparison between different models).
         """
         actions = [target_arr[:, np.r_[0:2, n:n+2]] for n in range(2, 10)[::2]]
         traj_len = len(state_arr)
         states = []
-        targs = [[] for n in range(4)]
         conds = [[] for n in range(4)]
 
-        if traj_len > 30:
-            prev_states = deque(maxlen=self.obs_n)
-            for i in range(traj_len):
-                prev_states.append(state_arr[i])
+        prev_states = deque(maxlen=self.obs_n)
+        for i in range(traj_len - 30):
+            prev_states.append(state_arr[i])
 
-                if len(prev_states) == self.obs_n:
-                    indx = np.arange(i, i+(self.pred_step_n+1)*self.step_size, self.step_size)
-                    indx = indx[indx<traj_len]
-                    if indx.size != self.pred_step_n+1:
-                        break
+            if len(prev_states) == self.obs_n:
+                indx = np.arange(i, i + 30, 1)
+                indx = indx[::self.step_size][:self.pred_step_n+1]
+                states.append(np.array(prev_states))
+                for n in range(4):
+                    conds[n].append(actions[n][indx[:-1]])
 
-                    states.append(np.array(prev_states))
-                    for n in range(4):
-                        targs[n].append(actions[n][indx[1:]])
-                        conds[n].append(actions[n][indx[:-1]])
-
-        targs = [np.array(targ) for targ in targs]
         conds = [np.array(cond) for cond in conds]
-        return np.array(states), targs, conds
+        return np.array(states), conds
 
     def prep_episode(self, episode_id):
         """
@@ -169,13 +152,12 @@ class MCEVALMultiStep():
         target_arr_sca = target_arr.copy()
         state_arr_sca[:, 2:-4] = self.state_scaler.transform(state_arr_sca[:, 2:-4])
         target_arr_sca[:, 2:] = self.action_scaler.transform(target_arr_sca[:, 2:])
-        states, targs, conds = self.obsSequence(state_arr_sca, target_arr_sca)
+        states, conds = self.obsSequence(state_arr_sca, target_arr_sca)
         if states.shape[0] < self.splits_n:
             return
         random_snippets = np.random.choice(range(states.shape[0]), self.splits_n, replace=False)
 
         states = states[random_snippets, :, 2:]
-        targs = [targ[random_snippets, :, 2:] for targ in targs]
         conds = [cond[random_snippets, :, 2:] for cond in conds]
 
         true_state_snips = []
@@ -213,7 +195,7 @@ class MCEVALMultiStep():
 
     def get_predicted_trace(self, states, conds, true_trace):
         true_trace_history = np.repeat(\
-                true_trace[:, :self.obs_n-1, 2:], self.traces_n, axis=0)
+                true_trace[:, :self.obs_n, 2:], self.traces_n, axis=0)
 
         gen_actions = self.policy.gen_action_seq(\
                             [states, conds], traj_n=self.traces_n)
@@ -227,9 +209,12 @@ class MCEVALMultiStep():
     def load_policy(self, model_name):
         model_config = self.read_model_config(model_name)
         model_type, epoch = self.config['model_map'][model_name]
+        self.model_type = model_type
+
         if model_type == 'CAE':
             from planner.action_policy import Policy
             self.policy = Policy()
+            self.policy.load_model(model_config, epoch)
 
         if model_type == 'MLP':
             exp_dir = './src/models/experiments/'+model_name
@@ -247,27 +232,23 @@ class MCEVALMultiStep():
             self.policy = LSTMEncoder(model_config)
             self.policy.load_weights(exp_path).expect_partial()
 
-    def run(self):
-        model_names = self.config['model_map'].keys()
-        self.states_arr, self.targets_arr = self.data_obj.load_val_data()
-        for model_name in model_names:
-            print('Model being evaluated: ', model_name)
-            if self.is_eval_complete(model_name):
-                print('Oops - this model is already evaluated.')
-                continue
-            else:
-                self.load_policy(model_name)
-                episode_ids = self.data_obj.load_test_episode_ids('')
-                i = self.episode_in_prog
-                while self.episode_in_prog < self.target_episode_count:
-                    true_collection, pred_collection = self.run_episode(\
-                                                    episode_ids[i])
+    def run(self, model_name):
+        print('Model being evaluated: ', model_name)
+        if self.is_eval_complete(model_name):
+            print('Oops - this model is already evaluated.')
+            pass
+        else:
+            self.load_policy(model_name)
+            i = self.episode_in_prog
+            while self.episode_in_prog < self.target_episode_count:
+                true_collection, pred_collection = self.run_episode(\
+                                                self.episode_ids[i])
 
-                    if true_collection:
-                        self.true_collections.extend(true_collection)
-                        self.pred_collections.extend(pred_collection)
-                        self.episode_in_prog += 1
+                if true_collection:
+                    self.true_collections.extend(true_collection)
+                    self.pred_collections.extend(pred_collection)
+                    self.episode_in_prog += 1
 
-                        self.dump_mc_logs(model_name)
-                        self.update_eval_config(model_name)
-                    i += 1
+                    self.dump_mc_logs(model_name)
+                    self.update_eval_config(model_name)
+                i += 1

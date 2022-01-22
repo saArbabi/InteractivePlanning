@@ -1,0 +1,28 @@
+{
+    "status": "COMPLETE",
+    "model_map": {
+        "lstm_001": [
+            "LSTM",
+            20
+        ],
+        "cae_003": [
+            "CAE",
+            50
+        ]
+    },
+    "mc_config": {
+        "episodes_n": 3,
+        "traces_n": 50,
+        "splits_n": 3
+    },
+    "progress_logging": {
+        "lstm_001": {
+            "episode_in_prog": "3/3",
+            "last_update": "22/01/2022 11:11:04"
+        },
+        "cae_003": {
+            "episode_in_prog": "3/3",
+            "last_update": "22/01/2022 11:11:09"
+        }
+    }
+}

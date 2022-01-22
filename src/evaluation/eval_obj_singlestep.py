@@ -27,8 +27,6 @@ class ForwardSimSingleStep():
         state_t_ii[lc_right, self.indxs.indx_m['pc']] = self.max_pc
 
     def step(self, state_t_i, state_t_ii, act_m):
-        state_t_i[:, self.indxs.indx_m['act_long']] = act_m[:, 0]
-        state_t_i[:, self.indxs.indx_m['act_lat']] = act_m[:, 1]
         state_t_ii[:, self.indxs.indx_m['act_long']] = act_m[:, 0]
         state_t_ii[:, self.indxs.indx_m['act_lat']] = act_m[:, 1]
 
@@ -55,11 +53,10 @@ class ForwardSimSingleStep():
         state_t_ii[:, self.indxs.indx_fadj['dx']] = next_dx
 
 class MCEVALSingleStep(MCEVALMultiStep):
-    def __init__(self, model_type, val_run_name=None):
-        super().__init__(val_run_name)
+    def __init__(self, config, val_run_name=None):
+        super().__init__(config, val_run_name)
         self.fs = ForwardSimSingleStep()
         self.pred_h = 20 # steps with 0.1 step size
-        self.model_type = model_type
 
     def scale_state(self, state_t):
         state_t = state_t.copy()
