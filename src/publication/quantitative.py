@@ -11,15 +11,33 @@ np.set_printoptions(suppress=True)
 """
 model_names = ['cae_001', 'cae_002', 'cae_003', 'cae_004']
 model_names = ['mlp_001', 'lstm_001']
-config_name = 'test'
+# config_name = 'test'
+# model_config_map = {
+#     # 'mlp_001': config_name,
+#     'lstm_001': config_name,
+#     'cae_003': config_name
+#     }
+# %%
+config_name = 'study_step_size'
 model_config_map = {
-    # 'mlp_001': config_name,
-    'lstm_001': config_name,
-    'cae_003': config_name
+    'cae_001': config_name,
+    'cae_002': config_name,
+    'cae_003': config_name,
+    'cae_004': config_name
     }
+
+# %%
+config_name = 'study_seq_len'
+model_config_map = {
+    'cae_007': config_name, # "pred_step_n": 1, "step_size": 3
+    'cae_005': config_name,  # "pred_step_n": 3, "step_size": 3
+    'cae_006': config_name, # "pred_step_n": 5, "step_size": 3
+    'cae_003': 'study_step_size', # "pred_step_n": 7, "step_size": 3
+    }
+
+# %%
+
 model_names = list(model_config_map.keys())
-
-
 true_collections = {}
 pred_collections = {}
 for model_name in model_names:
@@ -69,7 +87,8 @@ model_name = 'cae_004'
 model_name = 'mlp_001'
 
 model_name = 'lstm_001'
-# model_name = 'cae_003'
+model_name = 'cae_006'
+model_name = 'cae_003'
 
 # model_name = 'epoch_30'
 epoch = 20
@@ -81,7 +100,7 @@ indx_acts = indxs.indx_acts
 traces_n = 10
 time_steps = np.linspace(0, 3.9, 40)
 veh_names = ['veh_m', 'veh_y', 'veh_f', 'veh_fadj']
-scene_samples = range(1)
+scene_samples = range(6)
 # scene_samples = [2]
 for scene_sample in scene_samples:
     fig, axs = plt.subplots(figsize=(10, 1))
@@ -131,11 +150,11 @@ def get_scenario_err(index_name, model_name):
     """
     posx_true = true_collections[model_name][:,:,19:, indxs.indx_m[index_name]+2]
     posx_pred = pred_collections[model_name][:,:,:, indxs.indx_m[index_name]]
-    # for indx_ in [indxs.indx_y, indxs.indx_f, indxs.indx_fadj]:
-    #     posx_true = np.append(posx_true, \
-    #             true_collections[model_name][:,:,19:, indx_[index_name]+2], axis=0)
-    #     posx_pred = np.append(posx_pred, \
-    #             pred_collections[model_name][:,:,:, indx_[index_name]], axis=0)
+    for indx_ in [indxs.indx_y, indxs.indx_f, indxs.indx_fadj]:
+        posx_true = np.append(posx_true, \
+                true_collections[model_name][:,:,19:, indx_[index_name]+2], axis=0)
+        posx_pred = np.append(posx_pred, \
+                pred_collections[model_name][:,:,:, indx_[index_name]], axis=0)
 
     scenario_err_arr = []
     for m in range(posx_true.shape[0]):
@@ -199,4 +218,3 @@ lat_speed.legend(loc='upper center', bbox_to_anchor=(0.5, -.2), ncol=5)
 
 
 # %%
- 

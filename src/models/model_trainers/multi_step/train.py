@@ -27,18 +27,13 @@ config = {
 
 },
 "data_config": {"obs_n": 20,
-                "pred_step_n": 10,
-                "step_size": 2,
+                "pred_step_n": 7,
+                "step_size": 3,
                 "Note": ""
 },
 "model_name": "NA",
-"Note": "Without guided learning"
+"Note": "Model where all vehicle decoders access all vehicle actions"
 }
-
-from data.preprocessing import data_prep
-from data.preprocessing import data_obj
-reload(data_prep)
-reload(data_obj)
 data_objs = DataObj(config).loadData()
 train_input, val_input = data_objs[0:3], data_objs[3:]
 # train_input[0][7].shape
@@ -140,17 +135,17 @@ class Trainer():
 
 tf.random.set_seed(2021)
 model_trainer = Trainer()
-model_name = 'cae_'+'002'
+model_name = 'cae_'+'008'
 model_trainer.exp_dir = './src/models/experiments/'+model_name
 config['model_name'] = model_name
 # model_trainer.train(train_input, val_input, epochs=1)
-model_trainer.load_pre_trained(epoch_count='20')
+# model_trainer.load_pre_trained(epoch_count='25')
 # %%
 ################## Train ##################
 ################## ##### ##################
 ################## ##### ##################
 ################## ##### ##################
-model_trainer.train(train_input, val_input, epochs=20)
+model_trainer.train(train_input, val_input, epochs=10)
 ################## ##### ##################
 ################## ##### ##################
 ################## ##### ##################

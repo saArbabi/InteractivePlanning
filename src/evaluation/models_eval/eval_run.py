@@ -7,8 +7,8 @@ import json
 import pickle
 
 
-# config_name = 'study_step_size'
-config_name = 'test'
+config_name = 'study_seq_len'
+# config_name = 'test'
 # config_name = 'lstm_and_mlp'
 val_run_name = config_name
 # config_name = 'compare_epochs'
