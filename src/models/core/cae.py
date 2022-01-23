@@ -130,7 +130,7 @@ class FutureDecoder(tf.keras.Model):
         super(FutureDecoder, self).__init__(name="FutureDecoder")
         self.dec_units = 128
         self.components_n = config['model_config']['components_n'] # number of Mixtures
-        self.allowed_error = 0
+        self.allowed_error = config['model_config']['allowed_error']
         self.model_use = model_use # can be training or inference
         self.architecture_def()
 
@@ -193,11 +193,11 @@ class FutureDecoder(tf.keras.Model):
     def axis2_conc(self, items_list):
         return tf.concat(items_list, axis=-1)
 
-    def teacher_check(self, true, sample):
-        error = tf.math.abs(tf.math.subtract(sample, true))
+    def teacher_check(self, true_action, sampled_action):
+        error = tf.math.abs(tf.math.subtract(sampled_action, true_action))
         less = tf.cast(tf.math.less(error, self.allowed_error), dtype='float')
         greater = tf.cast(tf.math.greater_equal(error, self.allowed_error), dtype='float')
-        return  tf.math.add(tf.multiply(greater, true), tf.multiply(less, sample))
+        return  tf.math.add(tf.multiply(greater, true_action), tf.multiply(less, sampled_action))
 
     def sample_action_lik_____(self, gmm):
         action = gmm.sample(1)
@@ -257,6 +257,11 @@ class FutureDecoder(tf.keras.Model):
         gauss_params_seq_f = tf.zeros([0, 0, 0], dtype=tf.float32)
         gauss_params_seq_fadj = tf.zeros([0, 0, 0], dtype=tf.float32)
 
+        act_m = cond_m[:, 0:1, :]
+        act_y = cond_y[:, 0:1, :]
+        act_f = cond_f[:, 0:1, :]
+        act_fadj = cond_fadj[:, 0:1, :]
+
         if self.model_use == 'training':
             for step in range(steps_n):
                 tf.autograph.experimental.set_loop_options(shape_invariants=[
@@ -265,14 +270,15 @@ class FutureDecoder(tf.keras.Model):
                     (gauss_params_seq_f, tf.TensorShape([None,None,None])),
                     (gauss_params_seq_fadj, tf.TensorShape([None,None,None]))])
 
-
-                act_m = cond_m[:, step:step+1, :]
-                act_y = cond_y[:, step:step+1, :]
-                act_f = cond_f[:, step:step+1, :]
-                act_fadj = cond_fadj[:, step:step+1, :]
-
-                step_cond_f = act_f
-                step_cond_fadj = act_fadj
+                if step > 0:
+                    true_act_m = cond_m[:, step:step+1, :]
+                    true_act_y = cond_y[:, step:step+1, :]
+                    true_act_f = cond_f[:, step:step+1, :]
+                    true_act_fadj = cond_fadj[:, step:step+1, :]
+                    act_m = self.teacher_check(true_act_m, act_m)
+                    act_y = self.teacher_check(true_act_y, act_y)
+                    act_f = self.teacher_check(true_act_f, act_f)
+                    act_fadj = self.teacher_check(true_act_fadj, act_fadj)
 
                 step_cond_m = self.axis2_conc([act_m,
                                                     act_y,
@@ -282,6 +288,10 @@ class FutureDecoder(tf.keras.Model):
                 step_cond_y = self.axis2_conc([act_m,
                                                 act_y,
                                                 act_fadj])
+
+                step_cond_f = act_f
+                step_cond_fadj = act_fadj
+
 
                 """Merger vehicle
                 """
@@ -298,8 +308,7 @@ class FutureDecoder(tf.keras.Model):
 
                 gmm_params = [alphas, rhos, mus_lon, sigmas_lon, mus_lat, sigmas_lat]
                 gauss_params_m = self.pvector(gmm_params)
-                # gmm = self.get_pdf(gmm_params)
-                # act_m = self.sample_action(gmm)
+                act_m = self.sample_action(self.get_pdf(gauss_params_m))
 
                 """Yielder vehicle
                 """
@@ -316,8 +325,7 @@ class FutureDecoder(tf.keras.Model):
 
                 gmm_params = [alphas, rhos, mus_lon, sigmas_lon, mus_lat, sigmas_lat]
                 gauss_params_y = self.pvector(gmm_params)
-                # gmm = self.get_pdf(gmm_params)
-                # act_y = self.sample_action(gmm)
+                act_y = self.sample_action(self.get_pdf(gauss_params_y))
                 """F vehicle
                 """
                 outputs, state_h_f, state_c_f = self.lstm_layer_f(\
@@ -333,8 +341,8 @@ class FutureDecoder(tf.keras.Model):
 
                 gmm_params = [alphas, rhos, mus_lon, sigmas_lon, mus_lat, sigmas_lat]
                 gauss_params_f = self.pvector(gmm_params)
-                # gmm = self.get_pdf(gmm_params)
-                # act_f = self.sample_action(gmm)
+                act_f = self.sample_action(self.get_pdf(gauss_params_f))
+
                 """Fadj vehicle
                 """
                 outputs, state_h_fadj, state_c_fadj = self.lstm_layer_fadj(\
@@ -350,9 +358,7 @@ class FutureDecoder(tf.keras.Model):
 
                 gmm_params = [alphas, rhos, mus_lon, sigmas_lon, mus_lat, sigmas_lat]
                 gauss_params_fadj = self.pvector(gmm_params)
-                # gmm = self.get_pdf(gmm_params)
-                # act_fadj = self.sample_action(gmm)
-
+                act_fadj = self.sample_action(self.get_pdf(gauss_params_fadj))
 
                 if step == 0:
                     gauss_params_seq_m = gauss_params_m
@@ -379,12 +385,6 @@ class FutureDecoder(tf.keras.Model):
                     (gauss_params_seq_y, tf.TensorShape([None,None,None])),
                     (gauss_params_seq_f, tf.TensorShape([None,None,None])),
                     (gauss_params_seq_fadj, tf.TensorShape([None,None,None]))])
-
-                if step == 0:
-                    act_m = cond_m[:, step:step+1, :]
-                    act_y = cond_y[:, step:step+1, :]
-                    act_f = cond_f[:, step:step+1, :]
-                    act_fadj = cond_fadj[:, step:step+1, :]
 
                 step_cond_m = self.axis2_conc([act_m,
                                                     act_y,
