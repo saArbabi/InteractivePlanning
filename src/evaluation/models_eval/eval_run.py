@@ -7,8 +7,9 @@ import json
 import pickle
 
 
-config_name = 'study_seq_len'
-# config_name = 'test'
+# config_name = 'study_seq_len'
+# config_name = 'cae_008'
+config_name = 'test'
 # config_name = 'lstm_and_mlp'
 val_run_name = config_name
 # config_name = 'compare_epochs'
@@ -36,7 +37,7 @@ def main():
 
     model_names = eval_config['model_map'].keys()
     for model_name in model_names:
-        model_type, _ = eval_config['model_map'][model_name]
+        model_type, _, traffic_density = eval_config['model_map'][model_name]
 
         if model_type == 'CAE':
             eval_obj = MCEVALMultiStep(eval_config, val_run_name)
@@ -45,7 +46,7 @@ def main():
             eval_obj = MCEVALSingleStep(eval_config, val_run_name)
 
         eval_obj.eval_config_dir = eval_config_dir
-        eval_obj.episode_ids = data_obj.load_test_episode_ids('')
+        eval_obj.episode_ids = data_obj.load_test_episode_ids(traffic_density)
         eval_obj.states_arr, eval_obj.targets_arr = states_arr, targets_arr
         eval_obj.state_scaler, eval_obj.action_scaler = state_scaler, action_scaler
         eval_obj.run(model_name)

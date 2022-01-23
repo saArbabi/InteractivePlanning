@@ -1,8 +1,9 @@
 {
     "status": "NOT STARTED",
     "model_map": {
-        "lstm_001": ["LSTM", 20],
-        "mlp_001": ["MLP", 20],
+        "cae_003": ["CAE", 50, ""],
+        "cae_003": ["CAE", 50, "high_density"],
+        "cae_003": ["CAE", 50, "medium_density"]
     },
     "mc_config": {
         "episodes_n": 1,
