@@ -9,12 +9,12 @@ import pickle
 
 # config_name = 'study_seq_len'
 # config_name = 'cae_008'
-config_name = 'test'
+config_name = 'cae_009'
 # config_name = 'lstm_and_mlp'
 val_run_name = config_name
 # config_name = 'compare_epochs'
 # val_run_name = 'epoch_50'
-eval_config_dir = './src/evaluation/models_eval/'+ config_name +'.json'
+eval_config_dir = './src/evaluation/models_eval/config_files/'+ config_name +'.json'
 
 def read_eval_config(config_name):
     with open(eval_config_dir, 'rb') as handle:
@@ -52,7 +52,7 @@ def main():
                 eval_obj.val_run_name = val_run_name+'_'+traffic_density
                 eval_obj.model_run_name = model_name+'_'+traffic_density
             else:
-                eval_obj.val_run_name = val_run_name 
+                eval_obj.val_run_name = val_run_name
                 eval_obj.model_run_name = model_name
 
             eval_obj.episode_ids = data_obj.load_test_episode_ids(traffic_density)

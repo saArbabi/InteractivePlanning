@@ -37,7 +37,7 @@ model_config_map = {
 
 # %%
 model_config_map = {
-    'cae_008': 'cae_008', #  ??
+    'cae_008': 'cae_008', #  all vehicel decoders share the same action conditionals
     'cae_003': 'study_step_size', # "pred_step_n": 7, "step_size": 3
     }
 
@@ -128,8 +128,8 @@ indx_acts = indxs.indx_acts
 traces_n = 10
 time_steps = np.linspace(0, 3.9, 40)
 veh_names = ['veh_m', 'veh_y', 'veh_f', 'veh_fadj']
-scene_samples = range(3)
-# scene_samples = [2]
+# scene_samples = range(3)
+scene_samples = [22, 23, 24]
 for scene_sample in scene_samples:
     fig, axs = plt.subplots(figsize=(10, 1))
     start_time = true_collection[scene_sample, 0, 0, 1]
@@ -152,7 +152,6 @@ for scene_sample in scene_samples:
                 axs[v, s].plot(time_steps[19:], pred_trace,  color='grey')
                 # axs[veh_axis, state_axis].scatter(time_steps[19:][::5], pred_trace[::5],  color='black')
 # plt.savefig("test.png", dpi=500)
-
 # %%
 long_speed_err_collections['cae_003'].shape
 errs = long_speed_err_collections['cae_004'][:, -1]
@@ -178,15 +177,15 @@ def get_scenario_err(index_name, model_run_name):
     """
     posx_true = true_collections[model_run_name][:,:,19:, indxs.indx_m[index_name]+2]
     posx_pred = pred_collections[model_run_name][:,:,:, indxs.indx_m[index_name]]
-    for indx_ in [indxs.indx_y]:
-        posx_true = np.append(posx_true, \
-                true_collections[model_run_name][:,:,19:, indx_[index_name]+2], axis=0)
-        posx_pred = np.append(posx_pred, \
-                pred_collections[model_run_name][:,:,:, indx_[index_name]], axis=0)
+    # for indx_ in [indxs.indx_y, indxs.indx_f, indxs.indx_fadj]:
+    #     posx_true = np.append(posx_true, \
+    #             true_collections[model_run_name][:,:,19:, indx_[index_name]+2], axis=0)
+    #     posx_pred = np.append(posx_pred, \
+    #             pred_collections[model_run_name][:,:,:, indx_[index_name]], axis=0)
 
     scenario_err_arr = []
     # for m in range(posx_true.shape[0]):
-    for m in range(60*2):
+    for m in range(60):
         scenario_err_arr.append(get_trace_err(posx_pred[m, :, :], posx_true[m, :, :]))
     return np.array(scenario_err_arr)
 
@@ -240,10 +239,13 @@ error_total.shape
 lat_speed.set_ylabel('RWSE Lat.speed ($ms^{-1}$)')
 lat_speed.set_xlabel('Time horizon (s)')
 lat_speed.minorticks_off()
-# lat_speed.set_ylim(0,     2)
+# lat_speed.set_ylim(0, 2)
 # lat_speed.set_yticks([0, 1, 2, 3])
 lat_speed.legend(loc='upper center', bbox_to_anchor=(0.5, -.2), ncol=5)
 
 
 
 # %%
+# lat_speed_err_collections['cae_003_high_density'].shape
+# np.where(lat_speed_err_collections['cae_003_high_density']==2.8769739826493037)
+# plt.plot(lat_speed_err_collections['cae_003_high_density'][22, :])

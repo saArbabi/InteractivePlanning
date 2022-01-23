@@ -209,6 +209,8 @@ class MCEVALMultiStep():
         model_config = self.read_model_config(model_name)
         model_type, epoch, _ = self.eval_config['model_map'][model_name]
         self.model_type = model_type
+        print(model_name)
+
 
         if model_type == 'CAE':
             from planner.action_policy import Policy

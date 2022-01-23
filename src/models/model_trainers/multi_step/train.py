@@ -32,7 +32,7 @@ config = {
                 "Note": ""
 },
 "model_name": "NA",
-"Note": "Model where all vehicle decoders access all vehicle actions"
+"Note": "Single decoder for all cars"
 }
 data_objs = DataObj(config).loadData()
 train_input, val_input = data_objs[0:3], data_objs[3:]
@@ -79,6 +79,8 @@ class Trainer():
     def update_config(self):
         config['train_info'] = {}
         config['train_info']['epoch_count'] = self.epoch_count
+        config['model_name'] = self.model_name
+        model_trainer.exp_dir = './src/models/experiments/'+self.model_name
 
         with open(self.exp_dir+'/config.json', 'w', encoding='utf-8') as f:
             json.dump(config, f, ensure_ascii=False, indent=4)
@@ -135,11 +137,9 @@ class Trainer():
 
 tf.random.set_seed(2021)
 model_trainer = Trainer()
-model_name = 'cae_'+'003'
-model_trainer.exp_dir = './src/models/experiments/'+model_name
-config['model_name'] = model_name
+model_trainer.model_name = 'cae_'+'009'
 # model_trainer.train(train_input, val_input, epochs=1)
-model_trainer.load_pre_trained(epoch_count='50')
+# model_trainer.load_pre_trained(epoch_count='50')
 # %%
 ################## Train ##################
 ################## ##### ##################
@@ -172,5 +172,3 @@ model_trainer.save_loss()
 ##############
 ##############
 ##############
-a = {'s':3, 's': 5}
-a
