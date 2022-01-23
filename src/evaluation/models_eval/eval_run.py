@@ -37,19 +37,27 @@ def main():
 
     model_names = eval_config['model_map'].keys()
     for model_name in model_names:
-        model_type, _, traffic_density = eval_config['model_map'][model_name]
-
+        model_type, _, traffic_densities = eval_config['model_map'][model_name]
         if model_type == 'CAE':
-            eval_obj = MCEVALMultiStep(eval_config, val_run_name)
+            eval_obj = MCEVALMultiStep(eval_config)
 
         if model_type == 'MLP' or model_type == 'LSTM':
-            eval_obj = MCEVALSingleStep(eval_config, val_run_name)
-
+            eval_obj = MCEVALSingleStep(eval_config)
         eval_obj.eval_config_dir = eval_config_dir
-        eval_obj.episode_ids = data_obj.load_test_episode_ids(traffic_density)
         eval_obj.states_arr, eval_obj.targets_arr = states_arr, targets_arr
         eval_obj.state_scaler, eval_obj.action_scaler = state_scaler, action_scaler
-        eval_obj.run(model_name)
+
+        for traffic_density in traffic_densities:
+            if traffic_density:
+                eval_obj.val_run_name = val_run_name+'_'+traffic_density
+                eval_obj.model_run_name = model_name+'_'+traffic_density
+            else:
+                eval_obj.val_run_name = val_run_name 
+                eval_obj.model_run_name = model_name
+
+            eval_obj.episode_ids = data_obj.load_test_episode_ids(traffic_density)
+            eval_obj.traffic_density = traffic_density
+            eval_obj.run(model_name)
 
 if __name__=='__main__':
     main()

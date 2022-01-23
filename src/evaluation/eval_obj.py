@@ -16,11 +16,10 @@ import json
 
 
 class MCEVALMultiStep():
-    def __init__(self, config, val_run_name=None):
+    def __init__(self, config):
         self.collections = {} # collection of mc visited states
         self.fs = ForwardSim()
         self.indxs = StateIndxs()
-        self.val_run_name = val_run_name
         self.eval_config = config
         self.traces_n = self.eval_config['mc_config']['traces_n']
         self.splits_n = self.eval_config['mc_config']['splits_n']
@@ -35,11 +34,11 @@ class MCEVALMultiStep():
         self.pred_step_n = np.ceil(20/self.step_size).astype('int')
         return config
 
-    def update_eval_config(self, model_name):
+    def update_eval_config(self):
         now = datetime.now()
         dt_string = now.strftime("%d/%m/%Y %H:%M:%S")
         mc_config = self.eval_config['mc_config']
-        progress_logging = self.eval_config['progress_logging'][model_name]
+        progress_logging = self.eval_config['progress_logging'][self.model_run_name]
         progress_logging['last_update'] = dt_string
         progress_logging['episode_in_prog'] = \
                                     f'{self.episode_in_prog}/{mc_config["episodes_n"]}'
@@ -50,7 +49,7 @@ class MCEVALMultiStep():
         else:
             self.eval_config['status'] = 'IN PROGRESS ...'
 
-        self.eval_config['progress_logging'][model_name] = progress_logging
+        self.eval_config['progress_logging'][self.model_run_name] = progress_logging
         with open(self.eval_config_dir, 'w', encoding='utf-8') as f:
             json.dump(self.eval_config, f, ensure_ascii=False, indent=4)
 
@@ -65,7 +64,7 @@ class MCEVALMultiStep():
         with open(exp_dir+'/pred_collections.pickle', 'wb') as handle:
             pickle.dump(self.pred_collections, handle)
 
-    def initiate_eval(self, model_name):
+    def initiate_eval(self):
         self.true_collections = []
         self.pred_collections = []
         progress_logging = {}
@@ -73,7 +72,7 @@ class MCEVALMultiStep():
         self.episode_in_prog = 0
         progress_logging['episode_in_prog'] = 'NA'
         progress_logging['last_update'] = 'NA'
-        self.eval_config['progress_logging'][model_name] = progress_logging
+        self.eval_config['progress_logging'][self.model_run_name] = progress_logging
 
     def load_collections(self, model_name):
         exp_dir = './src/models/experiments/'+model_name+'/'+self.val_run_name
@@ -86,11 +85,11 @@ class MCEVALMultiStep():
     def is_eval_complete(self, model_name):
         """Check if this model has been fully evaluated.
         """
-        if not model_name in self.eval_config['progress_logging']:
-            self.initiate_eval(model_name)
+        if not self.model_run_name in self.eval_config['progress_logging']:
+            self.initiate_eval()
             return False
 
-        progress_logging = self.eval_config['progress_logging'][model_name]
+        progress_logging = self.eval_config['progress_logging'][self.model_run_name]
         mc_config = self.eval_config['mc_config']
         epis_n_left = 0 # remaining episodes ot compelte
 
@@ -105,7 +104,7 @@ class MCEVALMultiStep():
             progress_logging['episode_in_prog'] = \
                         f'{self.episode_in_prog}/{mc_config["episodes_n"]}'
             self.target_episode_count =  mc_config['episodes_n']
-            self.update_eval_config(model_name)
+            self.update_eval_config()
             return False
 
     def get_episode_arr(self, episode_id):
@@ -250,5 +249,5 @@ class MCEVALMultiStep():
                     self.episode_in_prog += 1
 
                     self.dump_mc_logs(model_name)
-                    self.update_eval_config(model_name)
+                    self.update_eval_config()
                 i += 1
