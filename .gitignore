@@ -1,2 +1,4 @@
 
 src/evaluation/models_eval/config_files/
+
+*.xlsx

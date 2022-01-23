@@ -53,8 +53,8 @@ class ForwardSimSingleStep():
         state_t_ii[:, self.indxs.indx_fadj['dx']] = next_dx
 
 class MCEVALSingleStep(MCEVALMultiStep):
-    def __init__(self, config, val_run_name=None):
-        super().__init__(config, val_run_name)
+    def __init__(self, config):
+        super().__init__(config)
         self.fs = ForwardSimSingleStep()
         self.pred_h = 20 # steps with 0.1 step size
 

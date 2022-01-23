@@ -11,63 +11,63 @@ np.set_printoptions(suppress=True)
 """
 model_names = ['cae_001', 'cae_002', 'cae_003', 'cae_004']
 model_names = ['mlp_001', 'lstm_001']
-# config_name = 'test'
-# model_config_map = {
-#     # 'mlp_001': config_name,
-#     'lstm_001': config_name,
-#     'cae_003': config_name
+# val_run_name = 'test'
+# model_val_run_map = {
+#     # 'mlp_001': val_run_name,
+#     'lstm_001': val_run_name,
+#     'cae_003': val_run_name
 #     }
 # %%
-config_name = 'study_step_size'
-model_config_map = {
-    'cae_001': config_name,
-    'cae_002': config_name,
-    'cae_003': config_name,
-    'cae_004': config_name
+""" effect of step_size """
+val_run_name = ['all_density']
+model_val_run_map = {
+    'cae_001': val_run_name,  # "pred_step_n": 20, "step_size": 1
+    'cae_002': val_run_name,  # "pred_step_n": 10, "step_size": 2
+    'cae_003': val_run_name,  # "pred_step_n": 7, "step_size": 3
+    'cae_004': val_run_name  # "pred_step_n": 5, "step_size": 4
     }
 
 # %%
-config_name = 'study_seq_len'
-model_config_map = {
-    'cae_007': config_name, # "pred_step_n": 1, "step_size": 3
-    'cae_005': config_name,  # "pred_step_n": 3, "step_size": 3
-    'cae_006': config_name, # "pred_step_n": 5, "step_size": 3
-    'cae_003': 'study_step_size', # "pred_step_n": 7, "step_size": 3
+""" effect of sequence length """
+val_run_name = ['all_density']
+model_val_run_map = {
+    'cae_007': val_run_name, # "pred_step_n": 1, "step_size": 3
+    'cae_005': val_run_name,  # "pred_step_n": 3, "step_size": 3
+    'cae_006': val_run_name, # "pred_step_n": 5, "step_size": 3
+    'cae_003': val_run_name, # "pred_step_n": 7, "step_size": 3
     }
 
 # %%
-model_config_map = {
-    'cae_008': 'cae_008', #  all vehicel decoders share the same action conditionals
-    'cae_003': 'study_step_size', # "pred_step_n": 7, "step_size": 3
+""" effect of guided learning """
+val_run_name = ['all_density']
+
+model_val_run_map = {
+    'cae_010': val_run_name, #
+    'cae_011': val_run_name, #
+    }
+# %%
+""" compare CAE, MLP and LSTM """
+val_run_name = ['all_density']
+
+model_val_run_map = {
+    'mlp_001': val_run_name, #
+    'lstm_001': val_run_name, #
     }
 
 # %%
-model_map = {
-    'cae_003': ["", "medium_density", "high_density"]
+""" effect of using different architectures """
+model_val_run_map = {
+    'cae_008': ['high_density', 'medium_density'], # Model where all vehicle decoders access all vehicle actions
+    'cae_009': ['high_density', 'medium_density'] # Single decoder for all cars
     }
-model_config_map = {}
-model_names = list(model_map.keys())
-val_run_name = 'test'
 
-for model_name in model_names:
-    traffic_densities = model_map[model_name]
-    for traffic_density in traffic_densities:
-        if traffic_density:
-            _val_run_name = val_run_name+'_'+traffic_density
-            model_run_name = model_name+'_'+traffic_density
-        else:
-            _val_run_name = val_run_name
-            model_run_name = model_name
-        model_config_map[model_run_name] = _val_run_name
-model_config_map
 # %%
-model_names = list(model_map.keys())
-
 true_collections = {}
 pred_collections = {}
-for model_name in list(model_map.keys()):
-    for model_run_name in list(model_config_map.keys()):
-        val_run_name = model_config_map[model_run_name]
+for model_name in list(model_val_run_map.keys()):
+    val_run_names = model_val_run_map[model_name]
+    for val_run_name in val_run_names:
+        model_run_name = model_name+'_'+val_run_name
         exp_dir = './src/models/experiments/'+model_name+'/' + val_run_name
 
         with open(exp_dir+'/true_collections.pickle', 'rb') as handle:
@@ -78,8 +78,7 @@ for model_name in list(model_map.keys()):
 
 true_collections[model_run_name].shape
 pred_collections[model_run_name].shape
-pred_collections[model_run_name].shape
-
+model_run_names = list(true_collections.keys())
 # %%
 """Compare different variants of the same model
 """
@@ -112,11 +111,11 @@ Visualisation of model predictions. Use this for debugging.
 """
 model_run_name = 'cae_004'
 model_run_name = 'mlp_001'
-model_config_map
+model_val_run_map
 model_run_name = 'lstm_001'
 model_run_name = 'cae_006'
-model_run_name = 'cae_003_high_density'
-# model_run_name = 'cae_008'
+model_run_name = 'cae_010_testall_density'
+# model_run_name = 'cae_010'
 
 # model_run_name = 'epoch_30'
 epoch = 20
@@ -128,8 +127,8 @@ indx_acts = indxs.indx_acts
 traces_n = 10
 time_steps = np.linspace(0, 3.9, 40)
 veh_names = ['veh_m', 'veh_y', 'veh_f', 'veh_fadj']
-# scene_samples = range(3)
-scene_samples = [22, 23, 24]
+scene_samples = range(3)
+# scene_samples = [22, 23, 24]
 for scene_sample in scene_samples:
     fig, axs = plt.subplots(figsize=(10, 1))
     start_time = true_collection[scene_sample, 0, 0, 1]
@@ -184,8 +183,8 @@ def get_scenario_err(index_name, model_run_name):
     #             pred_collections[model_run_name][:,:,:, indx_[index_name]], axis=0)
 
     scenario_err_arr = []
-    # for m in range(posx_true.shape[0]):
-    for m in range(60):
+    for m in range(posx_true.shape[0]):
+    # for m in range(30):
         scenario_err_arr.append(get_trace_err(posx_pred[m, :, :], posx_true[m, :, :]))
     return np.array(scenario_err_arr)
 
@@ -201,12 +200,11 @@ rwse long_speed
 fig = plt.figure(figsize=(6, 4))
 long_speed = fig.add_subplot(211)
 fig.subplots_adjust(hspace=0.1)
-# for model_run_name in list(model_config_map.keys()):
 
 long_speed_err_collections = {}
-for model_run_name in list(model_config_map.keys()):
+for model_run_name in model_run_names:
     long_speed_err_collections[model_run_name] = get_scenario_err('vel', model_run_name)
-for model_run_name in list(model_config_map.keys()):
+for model_run_name in model_run_names:
     scenario_err_arr = long_speed_err_collections[model_run_name]
     error_total = get_rwse(scenario_err_arr)
     long_speed.plot(time_steps, error_total, label=model_run_name)
@@ -225,13 +223,12 @@ rwse lat_speed
 """
 lat_speed = fig.add_subplot(212)
 fig.subplots_adjust(hspace=0.5)
-# for model_run_name in list(model_config_map.keys()):
 
 lat_speed_err_collections = {}
-for model_run_name in list(model_config_map.keys()):
+for model_run_name in model_run_names:
     lat_speed_err_collections[model_run_name] = get_scenario_err('act_lat', model_run_name)
 
-for model_run_name in list(model_config_map.keys()):
+for model_run_name in model_run_names:
     scenario_err_arr = lat_speed_err_collections[model_run_name]
     error_total = get_rwse(scenario_err_arr)
     lat_speed.plot(time_steps, error_total, label=model_run_name)

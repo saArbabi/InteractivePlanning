@@ -13,11 +13,11 @@ class EvalDataObj():
         return np.float32(states_val_arr), np.float32(targets_val_arr)
 
     def load_test_episode_ids(self, traffic_density):
-        assert traffic_density == '' or \
+        assert traffic_density == 'all_density' or \
                                         traffic_density == 'high_density' or \
                                         traffic_density == 'medium_density'
 
-        if traffic_density == '':
+        if traffic_density == 'all_density':
             dir_path = f'./src/datasets/validation_episodes.csv'
         else:
             dir_path = f'./src/datasets/{traffic_density+"_val_episodes"}.csv'

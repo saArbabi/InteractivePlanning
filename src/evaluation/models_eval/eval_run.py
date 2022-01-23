@@ -7,12 +7,9 @@ import json
 import pickle
 
 
-# config_name = 'study_seq_len'
-# config_name = 'cae_008'
-config_name = 'cae_009'
-# config_name = 'lstm_and_mlp'
-val_run_name = config_name
-# config_name = 'compare_epochs'
+val_run_name = ''
+# config_name = 'study_guided_learning'
+config_name = 'lstm_mlp'
 # val_run_name = 'epoch_50'
 eval_config_dir = './src/evaluation/models_eval/config_files/'+ config_name +'.json'
 
@@ -48,12 +45,8 @@ def main():
         eval_obj.state_scaler, eval_obj.action_scaler = state_scaler, action_scaler
 
         for traffic_density in traffic_densities:
-            if traffic_density:
-                eval_obj.val_run_name = val_run_name+'_'+traffic_density
-                eval_obj.model_run_name = model_name+'_'+traffic_density
-            else:
-                eval_obj.val_run_name = val_run_name
-                eval_obj.model_run_name = model_name
+            eval_obj.val_run_name = val_run_name+traffic_density
+            eval_obj.model_run_name = model_name+'_'+traffic_density
 
             eval_obj.episode_ids = data_obj.load_test_episode_ids(traffic_density)
             eval_obj.traffic_density = traffic_density
