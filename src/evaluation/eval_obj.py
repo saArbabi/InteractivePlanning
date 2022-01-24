@@ -40,11 +40,11 @@ class MCEVALMultiStep():
         mc_config = self.eval_config['mc_config']
         progress_logging = self.eval_config['progress_logging'][self.model_run_name]
         progress_logging['last_update'] = dt_string
-        progress_logging['episode_in_prog'] = \
-                                    f'{self.episode_in_prog}/{mc_config["episodes_n"]}'
+        progress_logging['current_episode_count'] = \
+                                    f'{self.current_episode_count}/{mc_config["episodes_n"]}'
 
-
-        if self.episode_in_prog == mc_config['episodes_n']:
+        progress_logging['episode_in_prog'] = self.episode_in_prog
+        if self.current_episode_count == mc_config['episodes_n']:
             self.eval_config['status'] = 'COMPLETE'
         else:
             self.eval_config['status'] = 'IN PROGRESS ...'
@@ -69,8 +69,10 @@ class MCEVALMultiStep():
         self.pred_collections = []
         progress_logging = {}
         self.target_episode_count = self.eval_config['mc_config']['episodes_n']
-        self.episode_in_prog = 0
-        progress_logging['episode_in_prog'] = 'NA'
+        self.current_episode_count = 0
+        self.episode_in_prog = self.episode_ids[0]
+        progress_logging['episode_in_prog'] = self.episode_in_prog
+        progress_logging['current_episode_count'] = 'NA'
         progress_logging['last_update'] = 'NA'
         self.eval_config['progress_logging'][self.model_run_name] = progress_logging
 
@@ -92,18 +94,14 @@ class MCEVALMultiStep():
         progress_logging = self.eval_config['progress_logging'][self.model_run_name]
         mc_config = self.eval_config['mc_config']
         epis_n_left = 0 # remaining episodes ot compelte
-
-        episode_in_prog = progress_logging['episode_in_prog']
-        episode_in_prog = episode_in_prog.split('/')
-        self.episode_in_prog = int(episode_in_prog[0])
-        epis_n_left = mc_config['episodes_n'] - self.episode_in_prog
+        self.current_episode_count = int(progress_logging['current_episode_count'].split('/')[0])
+        self.episode_in_prog = progress_logging['episode_in_prog']
+        epis_n_left = mc_config['episodes_n'] - self.current_episode_count
         if epis_n_left == 0:
             return True
         else:
             self.load_collections(model_name)
-            progress_logging['episode_in_prog'] = \
-                        f'{self.episode_in_prog}/{mc_config["episodes_n"]}'
-            self.target_episode_count =  mc_config['episodes_n']
+            self.target_episode_count = mc_config['episodes_n']
             self.update_eval_config()
             return False
 
@@ -131,6 +129,7 @@ class MCEVALMultiStep():
                 indx = np.arange(i, i + 30, 1)
                 indx = indx[::self.step_size][:self.pred_step_n+1]
                 states.append(np.array(prev_states))
+                # print(indx)
                 for n in range(4):
                     conds[n].append(actions[n][indx[:-1]])
 
@@ -155,7 +154,7 @@ class MCEVALMultiStep():
         if states.shape[0] < self.splits_n:
             return
         random_snippets = np.random.choice(range(states.shape[0]), self.splits_n, replace=False)
-
+        # print(random_snippets)
         states = states[random_snippets, :, 2:]
         conds = [cond[random_snippets, :, 2:] for cond in conds]
 
@@ -171,11 +170,11 @@ class MCEVALMultiStep():
         # for density in test_densities
         pred_collection = [] # evental shape: [m scenarios, n traces, time_steps_n, states_n]
         true_collection = [] # evental shape: [m scenarios, 1, time_steps_n, states_n]
-        np.random.seed(2020)
-        tf.random.set_seed(2020) # each trace has a unique tf seed
+        np.random.seed(episode_id)
+        tf.random.set_seed(episode_id) # each trace has a unique tf seed
         outputs = self.prep_episode(episode_id=episode_id)
         if not outputs:
-            return true_collection, pred_collection
+            return
         test_data, true_state_snips = outputs
         # true_state_snips: [episode_id, time_stamps, ...]
         self.fs.max_pc = true_state_snips[:, :, self.indxs.indx_m['pc']+2].max()
@@ -238,15 +237,16 @@ class MCEVALMultiStep():
             pass
         else:
             self.load_policy(model_name)
-            i = self.episode_in_prog
-            while self.episode_in_prog < self.target_episode_count:
-                true_collection, pred_collection = self.run_episode(\
-                                                self.episode_ids[i])
-
-                if true_collection:
+            i = np.where(self.episode_ids == self.episode_in_prog)[0]
+            i += 1 if self.current_episode_count > 0 else i
+            while self.current_episode_count < self.target_episode_count:
+                self.episode_in_prog = int(self.episode_ids[i])
+                collections = self.run_episode(self.episode_in_prog)
+                if collections:
+                    true_collection, pred_collection = collections
                     self.true_collections.extend(true_collection)
                     self.pred_collections.extend(pred_collection)
-                    self.episode_in_prog += 1
+                    self.current_episode_count += 1
 
                     self.dump_mc_logs(model_name)
                     self.update_eval_config()
