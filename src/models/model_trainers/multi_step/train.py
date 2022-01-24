@@ -16,6 +16,8 @@ print(os.getcwd())
 import time
 
 # %%
+
+# %%
 """
 Load data
 """
@@ -23,7 +25,7 @@ config = {
  "model_config": {
      "learning_rate": 1e-3,
      "components_n": 5,
-     "allowed_error": 0.2,
+     "allowed_error": 0.3,
     "batch_size": 512,
 
 },
@@ -137,7 +139,7 @@ class Trainer():
 
 tf.random.set_seed(2021)
 model_trainer = Trainer()
-model_trainer.model_name = 'cae_'+'011'
+model_trainer.model_name = 'cae_'+'012'
 model_trainer.exp_dir = './src/models/experiments/'+model_trainer.model_name
 
 # model_trainer.train(train_input, val_input, epochs=1)

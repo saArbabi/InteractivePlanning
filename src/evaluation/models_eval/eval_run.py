@@ -9,10 +9,13 @@ import pickle
 import numpy as np
 
 val_run_name = ''# the log file name will be val_run_name + traffic_density
-# config_name = 'study_guided_learning'
 config_name = 'test'
-config_name = 'study_step_size'
-# config_name = 'lstm_mlp'
+# config_name = 'study_step_size'
+# config_name = 'study_seq_len'
+config_name = 'cae_009'
+# config_name = 'study_guided_learning'
+
+config_name = 'lstm_mlp'
 # val_run_name = 'epoch_50'
 eval_config_dir = './src/evaluation/models_eval/config_files/'+ config_name +'.json'
 
@@ -20,7 +23,6 @@ def read_eval_config(config_name):
     with open(eval_config_dir, 'rb') as handle:
         eval_config = json.load(handle)
     return eval_config
-
 
 def loadScalers():
     with open('./src/datasets/'+'state_scaler', 'rb') as f:

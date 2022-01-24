@@ -7,17 +7,6 @@ indxs = StateIndxs()
 
 np.set_printoptions(suppress=True)
 # %%
-"""Compare different models
-"""
-model_names = ['cae_001', 'cae_002', 'cae_003', 'cae_004']
-model_names = ['mlp_001', 'lstm_001']
-# val_run_name = 'test'
-# model_val_run_map = {
-#     # 'mlp_001': val_run_name,
-#     'lstm_001': val_run_name,
-#     'cae_003': val_run_name
-#     }
-# %%
 """ effect of step_size """
 val_run_name = ['all_density']
 model_val_run_map = {
@@ -38,14 +27,6 @@ model_val_run_map = {
     }
 
 # %%
-""" effect of guided learning """
-val_run_name = ['all_density']
-
-model_val_run_map = {
-    'cae_010': val_run_name, #
-    'cae_011': val_run_name, #
-    }
-# %%
 """ compare CAE, MLP and LSTM """
 val_run_name = ['all_density']
 
@@ -54,14 +35,6 @@ model_val_run_map = {
     'mlp_001': val_run_name, #
     'lstm_001': val_run_name, #
     }
-
-# %%
-""" effect of using different architectures """
-model_val_run_map = {
-    'cae_008': ['high_density', 'medium_density'], # Model where all vehicle decoders access all vehicle actions
-    'cae_009': ['high_density', 'medium_density'] # Single decoder for all cars
-    }
-
 # %%
 true_collections = {}
 pred_collections = {}
@@ -111,19 +84,6 @@ pred_collection[0, 0, :, indx_acts[0][1]]
 """
 Visualisation of model predictions. Use this for debugging.
 """
-
-model_run_name = 'cae_003_all_density'
-model_run_name = 'mlp_001_all_density'
-# model_run_name = 'cae_010'
-
-epoch = 20
-cae =
-true_collections['cae_001_all_density'][:, 0, 0, 0]
-mlp =
-true_collections['cae_003_all_density'][:, 0, 0, 0]
-true_collections['cae_003_all_density'][:, 0, 0, 0]
-
-# %%
 true_collection = true_collections[model_run_name]
 pred_collection = pred_collections[model_run_name]
 
@@ -141,8 +101,7 @@ for scene_sample in scene_samples:
     plt.text(0.1, 0.1,
              'model_run_name: '+model_run_name+'\n'
              'start_time: '+str(start_time)+'\n'
-             'scene_sample: '+str(scene_sample)+'\n'
-             'epoch: '+str(epoch), fontsize=10)
+             'scene_sample: '+str(scene_sample), fontsize=10)
     fig, axs = plt.subplots(4, 2, figsize=(10, 10))
 
     for v, veh_axis in enumerate([indxs.indx_m, indxs.indx_y, indxs.indx_f, indxs.indx_fadj]):
