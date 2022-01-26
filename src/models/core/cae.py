@@ -469,14 +469,18 @@ class FutureDecoder(tf.keras.Model):
                 act_fadj = self.sample_action(self.get_pdf(gauss_params_fadj))
 
                 if step == 0:
+                    gauss_params_seq_m = gauss_params_m
                     act_seq_m = act_m
                     act_seq_y = act_y
                     act_seq_f = act_f
                     act_seq_fadj = act_fadj
                 else:
+                    gauss_params_seq_m = tf.concat([gauss_params_seq_m, gauss_params_m], axis=1)
                     act_seq_m = tf.concat([act_seq_m, act_m], axis=1)
                     act_seq_y = tf.concat([act_seq_y, act_y], axis=1)
                     act_seq_f = tf.concat([act_seq_f, act_f], axis=1)
                     act_seq_fadj = tf.concat([act_seq_fadj, act_fadj], axis=1)
 
-            return act_seq_m, act_seq_y, act_seq_f, act_seq_fadj
+            actions = [act_seq_m, act_seq_y, act_seq_f, act_seq_fadj]
+            gmm_m = self.get_pdf(gauss_params_seq_m)
+            return actions, gmm_m
