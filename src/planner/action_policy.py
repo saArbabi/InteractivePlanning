@@ -73,14 +73,14 @@ class Policy():
         gen_actions = self.inverse_transform_actions(gen_actions, traj_n)
         return gen_actions
 
-    def get_boundary_condition(self, true_trace_history):
+    def get_boundary_condition(self, trace_history):
         """
         This is to ensure smooth transitions from one action to the next.
         """
         bc_ders = []
         for indx_act in self.indxs.indx_acts:
-            bc_der = (true_trace_history[:, -1, indx_act[0]:indx_act[1]+1]-\
-                    true_trace_history[:, -2, indx_act[0]:indx_act[1]+1])/self.STEP_SIZE
+            bc_der = (trace_history[:, -1, indx_act[0]:indx_act[1]+1]-\
+                    trace_history[:, -2, indx_act[0]:indx_act[1]+1])/self.STEP_SIZE
             bc_ders.append(bc_der)
         return bc_ders
 

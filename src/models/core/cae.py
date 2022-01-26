@@ -130,8 +130,12 @@ class FutureDecoder(tf.keras.Model):
         super(FutureDecoder, self).__init__(name="FutureDecoder")
         self.dec_units = 128
         self.components_n = config['model_config']['components_n'] # number of Mixtures
-        self.allowed_error = config['model_config']['allowed_error']
         self.model_use = model_use # can be training or inference
+
+        if 'allowed_error' in config['model_config']:
+            self.allowed_error = config['model_config']['allowed_error']
+        else:
+            self.allowed_error = 0
         self.architecture_def()
 
     def architecture_def(self):

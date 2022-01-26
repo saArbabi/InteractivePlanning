@@ -16,13 +16,15 @@ import json
 
 
 class MCEVALMultiStep():
-    def __init__(self, config):
+    def __init__(self, config=None):
         self.collections = {} # collection of mc visited states
         self.fs = ForwardSim()
         self.indxs = StateIndxs()
-        self.eval_config = config
-        self.traces_n = self.eval_config['mc_config']['traces_n']
-        self.splits_n = self.eval_config['mc_config']['splits_n']
+
+        if config:
+            self.eval_config = config
+            self.traces_n = self.eval_config['mc_config']['traces_n']
+            self.splits_n = self.eval_config['mc_config']['splits_n']
 
     def read_model_config(self, model_name):
         exp_dir = './src/models/experiments/'+model_name
@@ -108,6 +110,9 @@ class MCEVALMultiStep():
     def get_episode_arr(self, episode_id):
         state_arr = self.states_arr[self.states_arr[:, 0] == episode_id]
         target_arr = self.targets_arr[self.targets_arr[:, 0] == episode_id]
+        time_stamps = range(state_arr.shape[0])
+        state_arr = np.insert(state_arr, 1, time_stamps, axis=1)
+        target_arr = np.insert(target_arr, 1, time_stamps, axis=1)
         return state_arr, target_arr
 
     def obsSequence(self, state_arr, target_arr):
@@ -136,23 +141,19 @@ class MCEVALMultiStep():
         conds = [np.array(cond) for cond in conds]
         return np.array(states), conds
 
-    def prep_episode(self, episode_id):
-        """
-        Split the episode sequence into splits_n.
-        Returns test_data to feed the model and true_state_snips for model evaluation
-        """
-        state_arr, target_arr = self.get_episode_arr(episode_id)
-        episode_len = state_arr.shape[0]
-        time_stamps = range(episode_len)
-        state_arr = np.insert(state_arr, 1, time_stamps, axis=1)
-        target_arr = np.insert(target_arr, 1, time_stamps, axis=1)
+    def sequence_episode(self, state_arr, target_arr):
         state_arr_sca = state_arr.copy()
         target_arr_sca = target_arr.copy()
         state_arr_sca[:, 2:-4] = self.state_scaler.transform(state_arr_sca[:, 2:-4])
         target_arr_sca[:, 2:] = self.action_scaler.transform(target_arr_sca[:, 2:])
         states, conds = self.obsSequence(state_arr_sca, target_arr_sca)
-        if states.shape[0] < self.splits_n:
-            return
+        return states, conds
+
+    def rand_split_episode(self, state_arr, states, conds):
+        """
+        Split the episode sequence into splits_n.
+        Returns test_data to feed the model and true_state_snips for model evaluation
+        """
         random_snippets = np.random.choice(range(states.shape[0]), self.splits_n, replace=False)
         # print(random_snippets)
         states = states[random_snippets, :, 2:]
@@ -162,26 +163,26 @@ class MCEVALMultiStep():
         for start_step in random_snippets:
             true_state_snips.append(state_arr[start_step:start_step + 40, :])
 
-        test_data = [states[:, :, :], conds] # to feed to model
-        return test_data, np.array(true_state_snips)[:, :, :]
+        test_data = [states, conds] # to feed to model
+        return test_data, np.array(true_state_snips)
+
 
     def run_episode(self, episode_id):
         # test_densities = # traffic densities to evaluate the model on
-        # for density in test_densities
-        pred_collection = [] # evental shape: [m scenarios, n traces, time_steps_n, states_n]
-        true_collection = [] # evental shape: [m scenarios, 1, time_steps_n, states_n]
         np.random.seed(episode_id)
         tf.random.set_seed(episode_id) # each trace has a unique tf seed
-        outputs = self.prep_episode(episode_id=episode_id)
-        if not outputs:
+        state_arr, target_arr = self.get_episode_arr(episode_id)
+        states, conds = self.sequence_episode(state_arr, target_arr)
+        if states.shape[0] < self.splits_n:
             return
-        test_data, true_state_snips = outputs
+        test_data, true_state_snips = self.rand_split_episode(state_arr, states, conds)
         # true_state_snips: [episode_id, time_stamps, ...]
         self.fs.max_pc = true_state_snips[:, :, self.indxs.indx_m['pc']+2].max()
         self.fs.min_pc = true_state_snips[:, :, self.indxs.indx_m['pc']+2].min()
 
+        pred_collection = [] # evental shape: [m scenarios, n traces, time_steps_n, states_n]
+        true_collection = [] # evental shape: [m scenarios, 1, time_steps_n, states_n]
         for split_i in range(self.splits_n):
-        # get action plans for this scene
             states = test_data[0][[split_i], :, :]
             conds = [item[[split_i], :, :] for item in test_data[1]]
             true_trace = true_state_snips[[split_i], :, :]
@@ -204,31 +205,29 @@ class MCEVALMultiStep():
         pred_trace = self.fs.forward_sim(state_0, action_plans)
         return pred_trace
 
-    def load_policy(self, model_name):
+    def load_policy(self, model_name, model_type, epoch):
         model_config = self.read_model_config(model_name)
-        model_type, epoch, _ = self.eval_config['model_map'][model_name]
-        self.model_type = model_type
-
         if model_type == 'CAE':
             from planner.action_policy import Policy
-            self.policy = Policy()
-            self.policy.load_model(model_config, epoch)
+            policy = Policy()
+            policy.load_model(model_config, epoch)
 
         if model_type == 'MLP':
             exp_dir = './src/models/experiments/'+model_name
             exp_path = f'{exp_dir}/model_epo{epoch}'
 
             from models.core.mlp import MLP
-            self.policy = MLP(model_config)
-            self.policy.load_weights(exp_path).expect_partial()
+            policy = MLP(model_config)
+            policy.load_weights(exp_path).expect_partial()
 
         if model_type == 'LSTM':
             exp_dir = './src/models/experiments/'+model_name
             exp_path = f'{exp_dir}/model_epo{epoch}'
 
             from models.core.lstm import LSTMEncoder
-            self.policy = LSTMEncoder(model_config)
-            self.policy.load_weights(exp_path).expect_partial()
+            policy = LSTMEncoder(model_config)
+            policy.load_weights(exp_path).expect_partial()
+        return policy
 
     def run(self, model_name):
         print('Model being evaluated: ', model_name)
@@ -236,7 +235,10 @@ class MCEVALMultiStep():
             print('Oops - this model is already evaluated.')
             pass
         else:
-            self.load_policy(model_name)
+            model_type, epoch, _ = self.eval_config['model_map'][model_name]
+            self.model_type = model_type
+
+            self.policy = self.load_policy(model_name, model_type, epoch)
             i = np.where(self.episode_ids == self.episode_in_prog)[0]
             i += 1 if self.current_episode_count > 0 else i
             while self.current_episode_count < self.target_episode_count:
