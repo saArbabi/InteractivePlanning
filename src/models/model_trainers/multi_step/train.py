@@ -25,7 +25,7 @@ config = {
  "model_config": {
      "learning_rate": 1e-3,
      "components_n": 5,
-     "allowed_error": 0.3,
+     "allowed_error": 0.5,
     "batch_size": 512,
 
 },
@@ -139,9 +139,9 @@ class Trainer():
 
 tf.random.set_seed(2021)
 model_trainer = Trainer()
-model_trainer.model_name = 'cae_'+'012'
+model_trainer.model_name = 'cae_'+'015'
 model_trainer.exp_dir = './src/models/experiments/'+model_trainer.model_name
-
+config
 # model_trainer.train(train_input, val_input, epochs=1)
 # model_trainer.load_pre_trained(epoch_count='50')
 # %%

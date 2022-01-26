@@ -12,10 +12,10 @@ val_run_name = ''# the log file name will be val_run_name + traffic_density
 config_name = 'test'
 # config_name = 'study_step_size'
 # config_name = 'study_seq_len'
-config_name = 'cae_009'
-# config_name = 'study_guided_learning'
+# config_name = 'cae_013'
+config_name = 'study_guided_learning'
 
-config_name = 'lstm_mlp'
+# config_name = 'lstm_mlp'
 # val_run_name = 'epoch_50'
 eval_config_dir = './src/evaluation/models_eval/config_files/'+ config_name +'.json'
 

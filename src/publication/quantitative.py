@@ -36,6 +36,14 @@ model_val_run_map = {
     'lstm_001': val_run_name, #
     }
 # %%
+"""  """
+val_run_name = ['all_density']
+
+model_val_run_map = {
+    'cae_003': val_run_name, #
+    'cae_014': val_run_name, #
+    }
+# %%
 true_collections = {}
 pred_collections = {}
 for model_name in list(model_val_run_map.keys()):
@@ -84,6 +92,8 @@ pred_collection[0, 0, :, indx_acts[0][1]]
 """
 Visualisation of model predictions. Use this for debugging.
 """
+model_run_name = 'cae_014_all_density'
+model_run_name = 'cae_003_all_density'
 true_collection = true_collections[model_run_name]
 pred_collection = pred_collections[model_run_name]
 
@@ -92,8 +102,8 @@ traces_n = 10
 time_steps = np.linspace(0, 3.9, 40)
 veh_names = ['veh_m', 'veh_y', 'veh_f', 'veh_fadj']
 
-# scene_samples = range(3)
-scene_samples = [100, 150, 200]
+scene_samples = range(3)
+# scene_samples = [100, 150, 200]
 for scene_sample in scene_samples:
     fig, axs = plt.subplots(figsize=(10, 1))
     start_time = true_collection[scene_sample, 0, 0, 1]

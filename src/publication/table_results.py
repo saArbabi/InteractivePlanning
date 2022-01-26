@@ -15,6 +15,7 @@ model_val_run_map = {
     'cae_010': val_run_name, # "allowed_error": 0.1
     'cae_011': val_run_name, # "allowed_error": 0.2
     'cae_012': val_run_name, # "allowed_error": 0.3
+    'cae_014': val_run_name, # "allowed_error": 0.4
     }
 # %%
 """ effect of using different architectures """
@@ -35,7 +36,16 @@ model_val_run_map = {
     'mlp_001': val_run_name, #
     'lstm_001': val_run_name, #
     }
+
 # %%
+""" No response dynamics considered """
+val_run_name = ['all_density']
+
+model_val_run_map = {
+    'cae_013': val_run_name, #
+    }
+# %%
+
 true_collections = {}
 pred_collections = {}
 for model_name in list(model_val_run_map.keys()):
@@ -84,7 +94,7 @@ def get_rwse(scenario_err_arr):
 # %%
 time_steps = np.linspace(0, 2., 21)
 veh_axiss = [indxs.indx_m, indxs.indx_y, indxs.indx_f, indxs.indx_fadj]
-veh_axis = veh_axiss[0]
+veh_axis = veh_axiss[3]
 """
 rwse long_speed
 """
