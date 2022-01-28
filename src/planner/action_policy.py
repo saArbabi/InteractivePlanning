@@ -18,7 +18,8 @@ class Policy():
     def __init__(self):
         # self.data_obj = test_data.data_obj
         self.discount_factor = 0.9
-        self.gamma = np.power(self.discount_factor, np.array(range(0,21)))
+        self.delta_t = 3
+        self.GAMMA = np.power(self.discount_factor, np.array(range(0,21)))
         self.pred_h = 20 # steps with 0.1 step size
         self.indxs = StateIndxs()
 
@@ -29,6 +30,9 @@ class Policy():
 
         with open('./src/datasets/'+'action_scaler', 'rb') as f:
             self.action_scaler = pickle.load(f)
+        with open('./src/datasets/'+'state_scaler', 'rb') as f:
+            self.state_scaler = pickle.load(f)
+
         self.step_size = config['data_config']['step_size']
         self.pred_step_n = np.ceil(self.pred_h/self.step_size).astype('int')
 
@@ -47,22 +51,24 @@ class Policy():
         gen_actions = [_gen_actions[:, :, n:n+2] for n in range(8)[::2] ]
         return gen_actions
 
-    def gen_action_seq(self, inputs, traj_n):
+    def cae_inference(self, inputs):
         """
         Uses CAE model in inference mode to generate an action sequence.
+        Returns:
+         - unscaled action seq
+         - gmm_m (to be used for query of action likelihoods)
         """
-        state_history, conds = inputs
+        states, conds = inputs
+        enc_state = self.model.enc_model(states)
+        _gen_actions, gmm_m = self.model.dec_model([conds, enc_state])
+        return _gen_actions, gmm_m
 
-        if traj_n > 1:
-            conds = [np.repeat(cond, traj_n, axis=0) for cond in conds]
-            state_history = np.repeat(state_history, traj_n, axis=0)
-            self.model.dec_model.traj_n = traj_n
-        else:
-            self.model.dec_model.traj_n = state_history.shape[0]
-
-        enc_state = self.model.enc_model(state_history)
-
-        _gen_actions = self.model.dec_model([conds, enc_state])
+    def gen_action_seq(self, _gen_actions, conds, traj_n):
+        """Inputs:
+            - unscaled action seq
+            Returns:
+            - scaled action seq with first step conditional inserted in the sequence
+        """
         gen_actions = [_act.numpy() for _act in _gen_actions]
         # t0 action is the conditional action
         gen_actions = []
@@ -73,14 +79,14 @@ class Policy():
         gen_actions = self.inverse_transform_actions(gen_actions, traj_n)
         return gen_actions
 
-    def get_boundary_condition(self, true_trace_history):
+    def get_boundary_condition(self, trace_history):
         """
         This is to ensure smooth transitions from one action to the next.
         """
         bc_ders = []
         for indx_act in self.indxs.indx_acts:
-            bc_der = (true_trace_history[:, -1, indx_act[0]:indx_act[1]+1]-\
-                    true_trace_history[:, -2, indx_act[0]:indx_act[1]+1])/self.STEP_SIZE
+            bc_der = (trace_history[:, -1, indx_act[0]:indx_act[1]+1]-\
+                    trace_history[:, -2, indx_act[0]:indx_act[1]+1])/self.STEP_SIZE
             bc_ders.append(bc_der)
         return bc_ders
 
@@ -106,27 +112,54 @@ class Policy():
 
         return vehicle_plans
 
-    def objective(self, actions, prob_mlon, prob_mlat):
-        """To evaluate the plans, and select the best one
-        """
-        jerk = actions[:,:,0]**2
-        jerk_norm = jerk/np.repeat([np.max(jerk, axis=0)], 2000, axis=0)
-        likelihoods = np.prod(prob_mlon, axis=1).flatten()+np.prod(prob_mlat, axis=1).flatten()
-        j = np.sum(jerk_norm*self.gamma, axis=1)
-        j_weight = 1
-        likelihood_weight = 3.5
+    def scale_state(self, state_t):
+        state_t = state_t.copy()
+        state_t[:, :, :-4] = (state_t[:, :, :-4]-\
+                              self.state_scaler.mean_)/self.state_scaler.var_**0.5
+        return state_t
 
-        discounted_cost = -j_weight*j  + likelihood_weight*likelihoods/max(likelihoods)
-        best_plan_indx = np.where(discounted_cost==max(discounted_cost))[0][0]
-        return best_plan_indx
+    def normalize(self, seq):
+        return seq/seq.max()
 
-    def mpc(self, obs_history, action_conditional, bc):
-        """bc is the boundary condition for spline fitting
+    def plan_evaluation_func(self, plans_m, _gen_actions, gmm_m):
+        """TODO: Add collision cost
+        Input:
+        - plans_m: continuous, scaled merger plan options
+        - _gen_actions: unscaled actions
+        - gmm_m: action gmm
+        Return:
+        - plan with highest utility, best plan's utility
         """
-        actions, prob_mlon, prob_mlat = self.get_actions(\
-                [obs_history, action_conditional], bc, traj_n=2000, pred_h=2)
-        best_plan_indx = self.objective(actions, prob_mlon, prob_mlat)
-        all_future_plans = actions[best_plan_indx, 1:self.replanning_rate+1, :]
-        ego_plan = all_future_plans[:, 0:2]
-        bc = (all_future_plans[-1]-all_future_plans[-2])*10
-        return ego_plan, bc
+        action_likelihoods = gmm_m.prob(_gen_actions[0]).numpy() # ensure actions are unscaled
+        plan_likelihood = np.prod(action_likelihoods, axis=1)
+        plan_likelihood = self.normalize(plan_likelihood)
+
+        jerk = (np.square(plans_m).sum(axis=-1)*self.GAMMA).sum(axis=-1)
+        jerk = self.normalize(jerk)
+
+        plans_utility = -(jerk) + plan_likelihood
+        best_plan_indx = np.argmax(plans_utility)
+        # print(plans_utility)
+        return plans_m[best_plan_indx, :, :], best_plan_indx
+
+    def mpc(self, trace_history, time_step, traj_n):
+        trace_history = np.repeat(\
+                trace_history[:, :, :], traj_n, axis=0)
+
+        states_i = self.scale_state(trace_history)
+        conds_i = []
+        for indx_act in self.indxs.indx_acts:
+            conds_i.append(states_i[:, -1:, indx_act[0]:indx_act[1]+1])
+
+        _gen_actions, gmm_m = self.cae_inference([states_i, conds_i])
+
+        gen_actions = self.gen_action_seq(\
+                            _gen_actions, conds_i, traj_n)
+
+        bc_ders = self.get_boundary_condition(trace_history)
+        action_plans = self.construct_policy(gen_actions, bc_ders, traj_n)
+        best_plan, _ = self.plan_evaluation_func(action_plans[0], _gen_actions, gmm_m)
+        if time_step == 0:
+            return best_plan[:self.delta_t, :]
+        else:
+            return best_plan[1:self.delta_t+1, :]

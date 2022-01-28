@@ -130,8 +130,12 @@ class FutureDecoder(tf.keras.Model):
         super(FutureDecoder, self).__init__(name="FutureDecoder")
         self.dec_units = 128
         self.components_n = config['model_config']['components_n'] # number of Mixtures
-        self.allowed_error = config['model_config']['allowed_error']
         self.model_use = model_use # can be training or inference
+
+        if 'allowed_error' in config['model_config']:
+            self.allowed_error = config['model_config']['allowed_error']
+        else:
+            self.allowed_error = 0
         self.architecture_def()
 
     def architecture_def(self):
@@ -232,13 +236,12 @@ class FutureDecoder(tf.keras.Model):
         # input[1] = encoder states
         cond_m, cond_y, cond_f, cond_fadj = inputs[0]
         state_h, state_c = inputs[1] # encoder cell state
+        batch_size = tf.shape(cond_m)[0] # dynamiclaly assigned
 
         if self.model_use == 'training':
-            batch_size = tf.shape(cond_m)[0] # dynamiclaly assigned
             steps_n = tf.shape(cond_m)[1] # dynamiclaly assigned
 
         elif self.model_use == 'inference':
-            batch_size = tf.constant(self.traj_n)
             steps_n = tf.constant(self.steps_n)
 
         enc_h = tf.reshape(state_h, [batch_size, 1, self.dec_units]) # encoder hidden state
@@ -465,14 +468,18 @@ class FutureDecoder(tf.keras.Model):
                 act_fadj = self.sample_action(self.get_pdf(gauss_params_fadj))
 
                 if step == 0:
+                    gauss_params_seq_m = gauss_params_m
                     act_seq_m = act_m
                     act_seq_y = act_y
                     act_seq_f = act_f
                     act_seq_fadj = act_fadj
                 else:
+                    gauss_params_seq_m = tf.concat([gauss_params_seq_m, gauss_params_m], axis=1)
                     act_seq_m = tf.concat([act_seq_m, act_m], axis=1)
                     act_seq_y = tf.concat([act_seq_y, act_y], axis=1)
                     act_seq_f = tf.concat([act_seq_f, act_f], axis=1)
                     act_seq_fadj = tf.concat([act_seq_fadj, act_fadj], axis=1)
 
-            return act_seq_m, act_seq_y, act_seq_f, act_seq_fadj
+            actions = [act_seq_m, act_seq_y, act_seq_f, act_seq_fadj]
+            gmm_m = self.get_pdf(gauss_params_seq_m)
+            return actions, gmm_m
