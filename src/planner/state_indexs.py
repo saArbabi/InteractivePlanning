@@ -33,3 +33,6 @@ class StateIndxs():
                 [self.indx_y['act_long'], self.indx_y['act_lat']],
                 [self.indx_f['act_long'], self.indx_f['act_lat']],
                 [self.indx_fadj['act_long'], self.indx_fadj['act_lat']]]
+        self.indxs = [self.indx_m, self.indx_y, self.indx_f, self.indx_fadj]
+
+ 

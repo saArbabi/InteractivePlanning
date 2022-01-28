@@ -236,13 +236,12 @@ class FutureDecoder(tf.keras.Model):
         # input[1] = encoder states
         cond_m, cond_y, cond_f, cond_fadj = inputs[0]
         state_h, state_c = inputs[1] # encoder cell state
+        batch_size = tf.shape(cond_m)[0] # dynamiclaly assigned
 
         if self.model_use == 'training':
-            batch_size = tf.shape(cond_m)[0] # dynamiclaly assigned
             steps_n = tf.shape(cond_m)[1] # dynamiclaly assigned
 
         elif self.model_use == 'inference':
-            batch_size = tf.constant(self.traj_n)
             steps_n = tf.constant(self.steps_n)
 
         enc_h = tf.reshape(state_h, [batch_size, 1, self.dec_units]) # encoder hidden state

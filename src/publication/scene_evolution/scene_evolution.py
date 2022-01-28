@@ -1,5 +1,5 @@
 """
-Action plans
+#######################################  Action plans vis #######################################
 """
 import sys
 sys.path.insert(0, './src')
@@ -8,33 +8,23 @@ from importlib import reload
 import numpy as np
 np.set_printoptions(suppress=True)
 from evaluation.eval_data_obj import EvalDataObj
-import pickle
+import tensorflow as tf
+from publication.scene_evolution import helpers
+reload(helpers)
+from publication.scene_evolution.helpers import *
 
-
-
-# policy = Policy()
-
-
-def loadScalers():
-    with open('./src/datasets/'+'state_scaler', 'rb') as f:
-        state_scaler = pickle.load(f)
-    with open('./src/datasets/'+'action_scaler', 'rb') as f:
-        action_scaler = pickle.load(f)
-    return state_scaler, action_scaler
 
 data_obj = EvalDataObj()
 states_arr, targets_arr = data_obj.load_val_data()
 state_scaler, action_scaler = loadScalers() # will set the scaler attributes
 
 # %%
+""" setup the scenario and predictive model """
 from models.core import cae
 reload(cae)
 from src.evaluation import eval_obj
 reload(eval_obj)
 from src.evaluation.eval_obj import MCEVALMultiStep
-from planner import action_policy
-reload(action_policy)
-from src.planner.action_policy import Policy
 eval_obj = MCEVALMultiStep()
 from planner.state_indexs import StateIndxs
 indxs = StateIndxs()
@@ -49,31 +39,10 @@ episode_id = 2215
 traces_n = 10
 snap_interval = 10 # number of steps between each snapshot of a trajectory
 snap_count = 3 # total number of snapshots of a given trajectory
-np.arange(50=)[::10]
-def split_episode(arrs, specs):
-    """
-    Inputs:
-    state_arr: un-scaled state array
-    states: processed (scaled + sequenced) state histories to feed model
-    conds: processed (scaled + sequenced) action conditionals to feed model
-    """
-    state_arr, states, conds = arrs
-    snap_interval, snap_count = specs
-    snippets = np.arange(states.shape[0])[::snap_interval]
-
-    states = states[snippets, :, 2:]
-    conds = [cond[snippets, :, 2:] for cond in conds]
-
-    true_state_snips = []
-    for start_step in snippets:
-        true_state_snips.append(state_arr[start_step:start_step + 40, :])
-
-    test_data = [states, conds] # to feed to model
-    return test_data, np.array(true_state_snips)
-
-
+tf_seed = episode_id
 
 policy = eval_obj.load_policy(model_name, model_type, epoch)
+tf.random.set_seed(episode_id) # each trace has a unique tf seed
 
 state_arr, target_arr = eval_obj.get_episode_arr(episode_id)
 states, conds = eval_obj.sequence_episode(state_arr, target_arr)
@@ -82,37 +51,46 @@ arrs = [state_arr, states, conds]
 specs = [snap_interval, snap_count]
 test_data, true_state_snips = split_episode(arrs, specs)
 
+""" generate action plans """
+
 pred_plans = [] # evental shape: [m scenarios, n traces, time_steps_n, states_n]
 true_plans = [] # evental shape: [m scenarios, 1, time_steps_n, states_n]
-veh_axiss = [indxs.indx_m, indxs.indx_y, indxs.indx_f, indxs.indx_fadj]
+best_plan_indxs = [] # evental shape: [m scenarios, 1, time_steps_n, states_n]
 
 for snap_i in range(snap_count):
     states_i = test_data[0][[snap_i], :, :]
     conds_i = [item[[snap_i], :, :] for item in test_data[1]]
-
     true_trace = true_state_snips[[snap_i], :, :]
-
     trace_history = np.repeat(\
             true_trace[:, :eval_obj.obs_n, 2:], traces_n, axis=0)
 
+    states_i = np.repeat(states_i, traces_n, axis=0)
+    conds_i = [np.repeat(cond, traces_n, axis=0) for cond in conds_i]
+
+    _gen_actions, gmm_m = policy.cae_inference([states_i, conds_i])
+
     gen_actions = policy.gen_action_seq(\
-                        [states_i, conds_i], traj_n=traces_n)
+                        _gen_actions, conds_i, traj_n=traces_n)
 
     bc_ders = policy.get_boundary_condition(trace_history)
     action_plans = policy.construct_policy(gen_actions, bc_ders, traces_n)
+    best_plan, best_plan_indx = policy.plan_evaluation_func(action_plans[0], _gen_actions, gmm_m)
 
     true_plan = []
-    for veh_axis in veh_axiss:
+    for veh_axis in indxs.indxs:
         act_axis = np.array([veh_axis['act_long'], veh_axis['act_lat']])+2
         true_plan.append(true_trace[:, :, act_axis])
 
     pred_plans.append(action_plans)
     true_plans.append(true_plan)
+    best_plan_indxs.append(best_plan_indx)
 
-action_plans[0].shape
-len(action_plans)
+
 # %%
+""" Plan visualisation figure """
 time_steps = np.linspace(0, 3.9, 40)
+ts_h = time_steps[:20]
+ts_f = time_steps[19:]
 subplot_xcount = 5
 subplot_ycount = 3
 fig, axs = plt.subplots(subplot_ycount, subplot_xcount, figsize=(18,9))
@@ -134,28 +112,36 @@ for subplot_xi in range(subplot_xcount):
         if subplot_yi == 2:
             axs[subplot_yi, subplot_xi].set_xlabel('Time (s)')
 
-
-
-# 5%%
 for snap_i in range(snap_count):
+    best_plan_indx = best_plan_indxs[snap_i] # index of chosen plan
+
     for veh_axis in range(4):
+        veh_pred_plans = pred_plans[snap_i][veh_axis]
+        veh_true_plans = true_plans[snap_i][veh_axis]
         if veh_axis == 0:
             # ego car
             for act_axis in range(2):
+                plot_plan_space(ts_f, veh_pred_plans[:, :, act_axis], axs[snap_i, act_axis])
                 for trace_i in range(traces_n):
-                    pred_plan = pred_plans[snap_i][veh_axis][trace_i, :, act_axis]
-                    axs[snap_i, act_axis].plot(time_steps[19:], pred_plan, color='grey', linewidth=0.9)
-                true_plan = true_plans[snap_i][veh_axis][0, :, act_axis]
-                axs[snap_i, act_axis].plot(time_steps[19:], true_plan[19:], color='red', linestyle='--')
-                axs[snap_i, act_axis].plot(time_steps[:20], true_plan[:20], color='black', linestyle='--')
+                    if trace_i != best_plan_indx:
+                        pred_plan = veh_pred_plans[trace_i, :, act_axis]
+                        axs[snap_i, act_axis].plot(ts_f, pred_plan, color='grey', linewidth=0.9)
+
+                true_plan = veh_true_plans[0, :, act_axis]
+                axs[snap_i, act_axis].plot(ts_f, true_plan[19:], color='red', linestyle='--')
+                axs[snap_i, act_axis].plot(ts_h, true_plan[:20], color='black', linestyle='--')
+
+                pred_plan = veh_pred_plans[best_plan_indx, :, act_axis]
+                axs[snap_i, act_axis].plot(ts_f, pred_plan, color='green')
         else:
             # only plot long.acc
             for trace_i in range(traces_n):
-                pred_plan = pred_plans[snap_i][veh_axis][trace_i, :, 0]
-                axs[snap_i, veh_axis+1].plot(time_steps[19:], pred_plan, color='grey', linewidth=0.9)
-            true_plan = true_plans[snap_i][veh_axis][0, :, 0]
-            axs[snap_i, veh_axis+1].plot(time_steps[19:], true_plan[19:], color='red', linestyle='--')
-            axs[snap_i, veh_axis+1].plot(time_steps[:20], true_plan[:20], color='black', linestyle='--')
+                pred_plan = veh_pred_plans[trace_i, :, 0]
+                axs[snap_i, veh_axis+1].plot(ts_f, pred_plan, color='grey', linewidth=0.9)
+            true_plan = veh_true_plans[0, :, 0]
+            axs[snap_i, veh_axis+1].plot(ts_f, true_plan[19:], color='red', linestyle='--')
+            axs[snap_i, veh_axis+1].plot(ts_h, true_plan[:20], color='black', linestyle='--')
+# plt.savefig("action_plans.png", dpi=500)
 
 # %%
 
@@ -173,6 +159,41 @@ for snap_i in range(snap_count):
 
 
 # %%
+
 """
-Trajectory
+#######################################  Trajectory vis #######################################
 """
+from planner import action_policy
+reload(action_policy)
+from planner.action_policy import Policy
+
+
+from publication.scene_evolution import vehicles
+reload(vehicles)
+
+from publication.scene_evolution import env
+reload(env)
+from publication.scene_evolution.env import Env
+
+policy = eval_obj.load_policy(model_name, model_type, epoch)
+env = Env(state_arr[:, 2:])
+env.caeveh.policy = policy
+tf.random.set_seed(10) # each trace has a unique tf seed
+
+for i in range(18):
+    env.step()
+# env.vehicles[0].actions
+# %%
+for state in ['glob_y', 'speed', 'act_long', 'act_lat', 'lane_y']:
+    plt.figure()
+    plt.plot(env.trace_log['caeveh'][state], color='grey')
+    plt.plot(env.trace_log['mveh'][state], color='red')
+    plt.title(state)
+    plt.grid()
+# %%
+from publication.scene_evolution import viewer
+reload(viewer)
+from publication.scene_evolution.viewer import Viewer
+
+plot_viewer = Viewer(env.trace_log)
+plot_viewer.draw_plots()

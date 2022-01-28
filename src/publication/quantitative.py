@@ -142,7 +142,7 @@ def get_trace_err(pred_traces, true_trace):
     """
     # mean across traces (axis=0)
     return np.mean((pred_traces - true_trace)**2, axis=0)
-
+true_collections[model_run_name][:,:,19:, indxs.indx_m['act_lat']+2].shape
 def get_scenario_err(index_name, model_run_name):
     """
     Input shpae [m scenarios, n traces, steps_n, state_index]
@@ -150,6 +150,15 @@ def get_scenario_err(index_name, model_run_name):
     """
     posx_true = true_collections[model_run_name][:,:,19:, indxs.indx_m[index_name]+2]
     posx_pred = pred_collections[model_run_name][:,:,:, indxs.indx_m[index_name]]
+    if index_name == 'act_lat':
+        y_pred = np.zeros([300, 50, 21])
+        y_true = np.zeros([300, 1, 21])
+        for i in range(1, 21):
+            y_true[:, :, i] = y_true[:, :, i-1] + posx_true[:, :, i-1]*0.1
+            y_pred[:, :, i] = y_pred[:, :, i-1] + posx_pred[:, :, i-1]*0.1
+
+        posx_true = y_true
+        posx_pred = y_pred
     for indx_ in [indxs.indx_y, indxs.indx_f, indxs.indx_fadj]:
         posx_true = np.append(posx_true, \
                 true_collections[model_run_name][:,:,19:, indx_[index_name]+2], axis=0)

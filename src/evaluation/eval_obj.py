@@ -196,9 +196,11 @@ class MCEVALMultiStep():
         true_trace_history = np.repeat(\
                 true_trace[:, :self.obs_n, 2:], self.traces_n, axis=0)
 
-        gen_actions = self.policy.gen_action_seq(\
-                            [states, conds], traj_n=self.traces_n)
+        states = np.repeat(states, self.traces_n, axis=0)
+        conds = [np.repeat(cond, self.traces_n, axis=0) for cond in conds]
 
+        _gen_actions, _ = self.policy.cae_inference([states, conds])
+        gen_actions = self.policy.gen_action_seq(_gen_actions, conds, traj_n=self.traces_n)
         bc_ders = self.policy.get_boundary_condition(true_trace_history)
         action_plans = self.policy.construct_policy(gen_actions, bc_ders, self.traces_n)
         state_0 = true_trace_history[:, -1, :]
