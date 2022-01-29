@@ -31,7 +31,7 @@ class Viewer():
     def set_up_traffic_fig(self):
         self.traffic_fig = plt.figure(figsize=(10, 9))
         self.traffic_fig.subplots_adjust(left=None, bottom=0.15, right=None, \
-                                top=None, wspace=None, hspace=0.3)
+                                top=None, wspace=None, hspace=0.4)
         self.scene_t1_ax = self.traffic_fig.add_subplot(311, facecolor='lightgrey')
         self.scene_t2_ax = self.traffic_fig.add_subplot(312, facecolor='lightgrey')
         self.scene_t3_ax = self.traffic_fig.add_subplot(313, facecolor='lightgrey')
@@ -41,13 +41,13 @@ class Viewer():
     def set_up_profile_fig(self):
         self.state_profile_fig = plt.figure(figsize=(10, 9))
         self.state_profile_fig.subplots_adjust(left=None, bottom=0.15, right=None, \
-                                top=None, wspace=None, hspace=0.3)
+                                top=None, wspace=None, hspace=0.4)
         self.speed_ax = self.state_profile_fig.add_subplot(311)
         self.act_long_ax = self.state_profile_fig.add_subplot(312)
         self.act_lat_ax = self.state_profile_fig.add_subplot(313)
         for ax in self.state_profile_fig.axes:
             ax.grid(alpha=0.6)
-            ax.set_xlim(0, 6)
+            ax.set_xlim(-0.2, 6)
             ax.set_xlabel('Time ($s$)')
 
     def draw_speeds(self, state_arr):
@@ -101,18 +101,24 @@ class Viewer():
         time_steps = np.linspace(0, 5.9, 60)
         traj_len = len(self.trace_log['mveh']['speed'])
 
-        self.speed_ax.plot(time_steps[:traj_len], self.trace_log['mveh']['speed'], color='red')
-        self.speed_ax.plot(time_steps[:traj_len], self.trace_log['caeveh']['speed'], color='green')
+        self.speed_ax.plot(
+            time_steps[:traj_len], self.trace_log['mveh']['speed'], color='red', linestyle='--')
+        self.speed_ax.plot(
+            time_steps[:traj_len], self.trace_log['caeveh']['speed'], color='green', linestyle='-')
         self.speed_ax.set_ylabel('Long. speed ($ms^{-1}$)')
-        self.speed_ax.yaxis.set_ticks(np.arange(10.5, 13, 0.5))
+        self.speed_ax.yaxis.set_ticks(np.arange(10., 13, 1))
 
-        self.act_long_ax.plot(time_steps[:traj_len], self.trace_log['mveh']['act_long'], color='red')
-        self.act_long_ax.plot(time_steps[:traj_len], self.trace_log['caeveh']['act_long'], color='green')
+        self.act_long_ax.plot(
+            time_steps[:traj_len], self.trace_log['mveh']['act_long'], color='red', linestyle='--')
+        self.act_long_ax.plot(
+            time_steps[:traj_len], self.trace_log['caeveh']['act_long'], color='green', linestyle='-')
         self.act_long_ax.yaxis.set_ticks(np.arange(-2, 2.1, 1))
         self.act_long_ax.set_ylabel('Long. acceleration ($ms^{-2}$)')
 
-        self.act_lat_ax.plot(time_steps[:traj_len], self.trace_log['mveh']['act_lat'], color='red')
-        self.act_lat_ax.plot(time_steps[:traj_len], self.trace_log['caeveh']['act_lat'], color='green')
+        self.act_lat_ax.plot(
+            time_steps[:traj_len], self.trace_log['mveh']['act_lat'], color='red', linestyle='--')
+        self.act_lat_ax.plot(
+            time_steps[:traj_len], self.trace_log['caeveh']['act_lat'], color='green', linestyle='-')
         self.act_lat_ax.yaxis.set_ticks(np.arange(-2, 2.1, 1))
         self.act_lat_ax.set_ylabel('Lateral speed ($ms^{-1}$)')
 
@@ -126,23 +132,24 @@ class Viewer():
             true_x = self.trace_log['mveh']['glob_x'][:chunk+snap_interval]
             true_y = self.trace_log['mveh']['glob_y'][:chunk+snap_interval]
             self.traffic_fig.axes[snap_i].plot(\
-                            true_x, true_y, color='red', linestyle='--')
+                    true_x, true_y, color='red', linestyle='--', linewidth=2.5)
 
             true_x = self.trace_log['yveh']['glob_x'][chunk+snap_interval-1]
             true_y = self.trace_log['yveh']['glob_y'][chunk+snap_interval-1]
-            self.traffic_fig.axes[snap_i].scatter(true_x, true_y, color='yellow')
+            self.traffic_fig.axes[snap_i].scatter(true_x, true_y, color='black', s=5)
 
             true_x = self.trace_log['fveh']['glob_x'][chunk+snap_interval-1]
             true_y = self.trace_log['fveh']['glob_y'][chunk+snap_interval-1]
-            self.traffic_fig.axes[snap_i].scatter(true_x, true_y, color='green')
+            self.traffic_fig.axes[snap_i].scatter(true_x, true_y, color='green', s=5)
 
             true_x = self.trace_log['fadjveh']['glob_x'][chunk+snap_interval-1]
             true_y = self.trace_log['fadjveh']['glob_y'][chunk+snap_interval-1]
-            self.traffic_fig.axes[snap_i].scatter(true_x, true_y, color='blue')
+            self.traffic_fig.axes[snap_i].scatter(true_x, true_y, color='blue', s=5)
 
             pred_x = self.trace_log['caeveh']['glob_x'][:chunk+snap_interval]
             pred_y = self.trace_log['caeveh']['glob_y'][:chunk+snap_interval]
-            self.traffic_fig.axes[snap_i].plot(pred_x, pred_y, color='green')
+            self.traffic_fig.axes[snap_i].plot(\
+                            pred_x, pred_y, color='green', linewidth=2.5, alpha=0.9)
 
             chunk += snap_interval
 
@@ -161,13 +168,12 @@ class Viewer():
         #                         self.scene_t2_ax,
         #                         self.scene_t3_ax],
         #                         vehicles)
-        # self.traffic_fig.savefig("env_evolution.png", dpi=500, bbox_inches = 'tight',
+
         # pad_inches = 0)
         # plt.close()
         # self.draw_v_profile(self.speed_ax, vehicles)
         # self.draw_along_profile(self.act_long_ax, vehicles)
         # self.draw_alat_profile(self.act_lat_ax, vehicles)
-        # self.state_profile_fig.savefig("env_profiles.png", dpi=500, bbox_inches = 'tight',
         # pad_inches = 0)
         # plt.close()
                 # plt.show()

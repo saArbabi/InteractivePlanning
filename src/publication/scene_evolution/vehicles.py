@@ -12,7 +12,7 @@ class Vehicle(object):
         self.glob_y = glob_y
         self.speed = speed
         self.lane_y = 0
-        self.lane_width = 3.75
+        self.lane_width = 4
         self.delta_t = 3
 
     def step(self, actions):
@@ -67,4 +67,4 @@ class CAEVehicle(Vehicle):
         return obs_t
 
     def act(self, time_step):
-        return self.policy.mpc(self.obs_history, time_step, 10)
+        return self.policy.mpc(self.obs_history, time_step)
