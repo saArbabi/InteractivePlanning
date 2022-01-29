@@ -1,16 +1,34 @@
 import numpy as np
 import matplotlib.pyplot as plt
+from planner.state_indexs import StateIndxs
+
+
 class Viewer():
     def __init__(self, trace_log):
         # plt.rcParams.update({'font.size': 14})
+        self.indxs = StateIndxs()
         self.env_config = {
                             'lane_width': 4,
                             'lane_length': 300,
                             'lane_count': 3}
         self.trace_log = trace_log
-        self.set_up_figures()
+        # self.set_up_figures()
 
-    def set_up_figures(self):
+    def set_up_traffic_intro_fig(self):
+        self.traffic_intro_fig = plt.figure(figsize=(10, 3))
+        self.traffic_intro_fig.subplots_adjust(left=None, bottom=0.15, right=None, \
+                                top=None, wspace=None, hspace=0.3)
+        # self.scene = self.traffic_intro_fig.add_subplot(111, facecolor='lightgrey')
+        # self.draw_road(self.scene)
+        self.speeds = self.traffic_intro_fig.add_subplot(111)
+        self.speeds.set_xlabel('Time ($s$)')
+        self.speeds.set_ylabel('Long. speed ($ms^{-1}$)')
+        self.speeds.yaxis.set_ticks(range(0, 15, 2))
+        self.speeds.set_ylim(7.5, 12.5)
+        self.speeds.set_xlim(-0.2, 9)
+
+
+    def set_up_traffic_fig(self):
         self.traffic_fig = plt.figure(figsize=(10, 9))
         self.traffic_fig.subplots_adjust(left=None, bottom=0.15, right=None, \
                                 top=None, wspace=None, hspace=0.3)
@@ -20,8 +38,7 @@ class Viewer():
         for ax in self.traffic_fig.axes:
             self.draw_road(ax)
 
-
-
+    def set_up_profile_fig(self):
         self.state_profile_fig = plt.figure(figsize=(10, 9))
         self.state_profile_fig.subplots_adjust(left=None, bottom=0.15, right=None, \
                                 top=None, wspace=None, hspace=0.3)
@@ -32,6 +49,35 @@ class Viewer():
             ax.grid(alpha=0.6)
             ax.set_xlim(0, 6)
             ax.set_xlabel('Time ($s$)')
+
+    def draw_speeds(self, state_arr):
+        traj_len = len(state_arr[:, self.indxs.indx_m['vel']])
+        time_steps = np.linspace(0, traj_len*0.1, traj_len)
+
+        speed_prof = state_arr[:, self.indxs.indx_m['vel']]
+        self.speeds.plot(time_steps, speed_prof, color='orange', linewidth=3)
+        self.speeds.scatter(time_steps[::10], \
+                speed_prof[::10], color='orange', marker="v", s=100)
+
+        speed_prof = state_arr[:, self.indxs.indx_y['vel']]
+        self.speeds.plot(time_steps, speed_prof, color='gold', linewidth=3)
+        self.speeds.scatter(time_steps[::10], \
+                    speed_prof[::10], color='gold', marker="v", s=100)
+
+        speed_prof = state_arr[:, self.indxs.indx_f['vel']]
+        self.speeds.plot(time_steps, speed_prof, color='green', linewidth=3)
+        self.speeds.scatter(time_steps[::10], \
+                    speed_prof[::10], color='green', marker="v", s=100)
+
+        speed_prof = state_arr[:, self.indxs.indx_fadj['vel']]
+        self.speeds.plot(time_steps, speed_prof, color='royalblue', linewidth=3)
+        self.speeds.scatter(time_steps[::10], \
+                    speed_prof[::10], color='royalblue', marker="v", s=100)
+
+        self.speeds.legend(['$e$', '$v_1$', '$v_2$', '$v_3$'], facecolor='green')
+        self.speeds.plot([time_steps[19], time_steps[19]], [5, 13], color='black',
+                                                                linestyle='--')
+
 
     def draw_road(self, ax):
         lane_cor = self.env_config['lane_width']*self.env_config['lane_count']

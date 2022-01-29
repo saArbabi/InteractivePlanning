@@ -20,6 +20,10 @@ state_scaler, action_scaler = loadScalers() # will set the scaler attributes
 
 # %%
 """ setup the scenario and predictive model """
+from planner import action_policy
+reload(action_policy)
+from planner.action_policy import Policy
+
 from models.core import cae
 reload(cae)
 from src.evaluation import eval_obj
@@ -154,18 +158,43 @@ for snap_i in range(snap_count):
         plt.plot(pred_plans[snap_i][0][trace_i, :, 0], color='grey')
 
 
-# %%
-
-
 
 # %%
+"""
+#######################################  Scenario intro #######################################
+"""
+params = {
+          'font.size' : 20,
+          'font.family' : 'EB Garamond',
+          }
+plt.rcParams.update(params)
+plt.style.use(['science','ieee'])
+MEDIUM_SIZE = 14
+LARGE_SIZE = 16
 
+plt.rc('font', size=MEDIUM_SIZE)          # controls default text sizes
+plt.rc('axes', titlesize=LARGE_SIZE)     # fontsize of the axes title
+plt.rc('axes', labelsize=LARGE_SIZE)    # fontsize of the x and y labels
+plt.rc('xtick', labelsize=MEDIUM_SIZE)    # fontsize of the tick labels
+plt.rc('ytick', labelsize=MEDIUM_SIZE)    # fontsize of the tick labels
+plt.rc('legend', fontsize=MEDIUM_SIZE)    # legend fontsize
+
+from publication.scene_evolution import viewer
+reload(viewer)
+from publication.scene_evolution.viewer import Viewer
+
+plot_viewer = Viewer(env.trace_log)
+plot_viewer.set_up_traffic_intro_fig()
+plot_viewer.draw_speeds(state_arr[:, 2:])
+plt.savefig("speeds.png", dpi=500)
+
+
+
+
+# %%
 """
 #######################################  Trajectory vis #######################################
 """
-from planner import action_policy
-reload(action_policy)
-from planner.action_policy import Policy
 
 
 from publication.scene_evolution import vehicles
