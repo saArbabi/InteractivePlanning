@@ -200,9 +200,9 @@ class MCEVALMultiStep():
         conds = [np.repeat(cond, self.traces_n, axis=0) for cond in conds]
 
         _gen_actions, _ = self.policy.cae_inference([states, conds])
-        gen_actions = self.policy.gen_action_seq(_gen_actions, conds, traj_n=self.traces_n)
+        gen_actions = self.policy.gen_action_seq(_gen_actions, conds)
         bc_ders = self.policy.get_boundary_condition(true_trace_history)
-        action_plans = self.policy.construct_policy(gen_actions, bc_ders, self.traces_n)
+        action_plans = self.policy.construct_policy(gen_actions, bc_ders)
         state_0 = true_trace_history[:, -1, :]
         pred_trace = self.fs.forward_sim(state_0, action_plans)
         return pred_trace
@@ -213,6 +213,7 @@ class MCEVALMultiStep():
             from planner.action_policy import Policy
             policy = Policy()
             policy.load_model(model_config, epoch)
+            # policy.traj_n = self.traces_n
 
         if model_type == 'MLP':
             exp_dir = './src/models/experiments/'+model_name

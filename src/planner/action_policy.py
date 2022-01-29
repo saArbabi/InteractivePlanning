@@ -43,11 +43,11 @@ class Policy():
         self.model.load_weights(exp_path).expect_partial()
         self.model.dec_model.steps_n = self.pred_step_n
 
-    def inverse_transform_actions(self, _gen_actions, traj_n):
+    def inverse_transform_actions(self, _gen_actions):
         _gen_actions = np.concatenate(_gen_actions, axis=-1)
-        _gen_actions.shape = (traj_n*(self.pred_step_n+1), 8)
+        _gen_actions.shape = (self.traj_n*(self.pred_step_n+1), 8)
         _gen_actions = self.action_scaler.inverse_transform(_gen_actions)
-        _gen_actions.shape = (traj_n, self.pred_step_n+1, 8)
+        _gen_actions.shape = (self.traj_n, self.pred_step_n+1, 8)
         gen_actions = [_gen_actions[:, :, n:n+2] for n in range(8)[::2] ]
         return gen_actions
 
@@ -63,7 +63,7 @@ class Policy():
         _gen_actions, gmm_m = self.model.dec_model([conds, enc_state])
         return _gen_actions, gmm_m
 
-    def gen_action_seq(self, _gen_actions, conds, traj_n):
+    def gen_action_seq(self, _gen_actions, conds):
         """Inputs:
             - unscaled action seq
             Returns:
@@ -76,7 +76,7 @@ class Policy():
             gen_action = np.insert(gen_action, 0, cond[:, 0, :], axis=1)
             gen_actions.append(gen_action)
 
-        gen_actions = self.inverse_transform_actions(gen_actions, traj_n)
+        gen_actions = self.inverse_transform_actions(gen_actions)
         return gen_actions
 
     def get_boundary_condition(self, trace_history):
@@ -90,7 +90,7 @@ class Policy():
             bc_ders.append(bc_der)
         return bc_ders
 
-    def construct_policy(self, gen_actions, bc_ders, traj_n):
+    def construct_policy(self, gen_actions, bc_ders):
         """Spline interpolation to turn action sequences into continuous plans.
         """
         if self.step_size == 1:
@@ -103,7 +103,7 @@ class Policy():
         vehicle_plans = [] # action plans for all the vehicles
         for gen_action, bc_der in zip(gen_actions, bc_ders):
             f = CubicSpline(time_coarse, gen_action[:, :, :],
-                                bc_type=((1, bc_der), (2, np.zeros([traj_n, 2]))),
+                                bc_type=((1, bc_der), (2, np.zeros([self.traj_n, 2]))),
                                 axis=1)
             # f = CubicSpline(time_coarse, gen_action[:, :, :], axis=1)
 
@@ -136,15 +136,15 @@ class Policy():
 
         jerk = (np.square(plans_m).sum(axis=-1)*self.GAMMA).sum(axis=-1)
         jerk = self.normalize(jerk)
-
-        plans_utility = -(jerk) + plan_likelihood
+        w = 4
+        plans_utility = -(jerk) + w*plan_likelihood
         best_plan_indx = np.argmax(plans_utility)
         # print(plans_utility)
         return plans_m[best_plan_indx, :, :], best_plan_indx
 
-    def mpc(self, trace_history, time_step, traj_n):
+    def mpc(self, trace_history, time_step):
         trace_history = np.repeat(\
-                trace_history[:, :, :], traj_n, axis=0)
+                trace_history[:, :, :], self.traj_n, axis=0)
 
         states_i = self.scale_state(trace_history)
         conds_i = []
@@ -154,10 +154,10 @@ class Policy():
         _gen_actions, gmm_m = self.cae_inference([states_i, conds_i])
 
         gen_actions = self.gen_action_seq(\
-                            _gen_actions, conds_i, traj_n)
+                            _gen_actions, conds_i)
 
         bc_ders = self.get_boundary_condition(trace_history)
-        action_plans = self.construct_policy(gen_actions, bc_ders, traj_n)
+        action_plans = self.construct_policy(gen_actions, bc_ders)
         best_plan, _ = self.plan_evaluation_func(action_plans[0], _gen_actions, gmm_m)
         if time_step == 0:
             return best_plan[:self.delta_t, :]
