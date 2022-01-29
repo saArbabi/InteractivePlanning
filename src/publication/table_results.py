@@ -11,10 +11,10 @@ np.set_printoptions(suppress=True)
 val_run_name = ['all_density']
 
 model_val_run_map = {
-    'cae_003': val_run_name, #
-    'cae_010': val_run_name, # "allowed_error": 0.1
+    # 'cae_003': val_run_name, #
+    # 'cae_010': val_run_name, # "allowed_error": 0.1
     'cae_011': val_run_name, # "allowed_error": 0.2
-    'cae_012': val_run_name, # "allowed_error": 0.3
+    # 'cae_012': val_run_name, # "allowed_error": 0.3
     'cae_014': val_run_name, # "allowed_error": 0.4
     }
 # %%
@@ -23,8 +23,8 @@ val_run_name = ['all_density']
 
 model_val_run_map = {
     # 'cae_003': val_run_name, #
-    'cae_008': val_run_name, #
-    'cae_009': val_run_name, #
+    # 'cae_008': val_run_name, #
+    'cae_009': val_run_name, # single decoder
     }
 
 # %%
@@ -32,7 +32,7 @@ model_val_run_map = {
 val_run_name = ['all_density']
 
 model_val_run_map = {
-    'cae_012': val_run_name, #
+    'cae_003': val_run_name, #
     'mlp_001': val_run_name, #
     'lstm_001': val_run_name, #
     }
@@ -81,6 +81,14 @@ def get_scenario_err(veh_axis, state_axis, model_run_name):
     """
     posx_true = true_collections[model_run_name][:,:,19:, veh_axis[state_axis]+2]
     posx_pred = pred_collections[model_run_name][:,:,:, veh_axis[state_axis]]
+    _pred = np.zeros([posx_true.shape[0], 50, 21])
+    _true = np.zeros([posx_true.shape[0], 1, 21])
+    for i in range(1, 21):
+        _true[:, :, i] = _true[:, :, i-1] + posx_true[:, :, i-1]*0.1
+        _pred[:, :, i] = _pred[:, :, i-1] + posx_pred[:, :, i-1]*0.1
+
+    posx_true = _true
+    posx_pred = _pred
 
     scenario_err_arr = []
     for m in range(posx_true.shape[0]):
@@ -94,49 +102,37 @@ def get_rwse(scenario_err_arr):
 # %%
 time_steps = np.linspace(0, 2., 21)
 veh_axiss = [indxs.indx_m, indxs.indx_y, indxs.indx_f, indxs.indx_fadj]
-veh_axis = veh_axiss[3]
-"""
-rwse long_speed
-"""
-fig = plt.figure(figsize=(6, 4))
-long_speed = fig.add_subplot(211)
-fig.subplots_adjust(hspace=0.1)
-
-long_speed_err_collections = {}
-for model_run_name in model_run_names:
-    long_speed_err_collections[model_run_name] = get_scenario_err(veh_axis, 'vel', model_run_name)
-for model_run_name in model_run_names:
-    scenario_err_arr = long_speed_err_collections[model_run_name]
-    error_total = get_rwse(scenario_err_arr)
-    long_speed.plot(time_steps, error_total, label=model_run_name)
-
-long_speed.set_ylabel('RWSE Long.speed ($ms^{-1}$)', labelpad=10)
-"""
-rwse lat_speed
-"""
-lat_speed = fig.add_subplot(212)
-fig.subplots_adjust(hspace=0.5)
-
-lat_speed_err_collections = {}
-for model_run_name in model_run_names:
-    lat_speed_err_collections[model_run_name] = get_scenario_err(veh_axis, 'act_lat', model_run_name)
+veh_names = ['veh_m', 'veh_y', 'veh_f', 'veh_fadj']
+long_err_at_2s = {}
+lat_err_at_2s = {}
 
 for model_run_name in model_run_names:
-    scenario_err_arr = lat_speed_err_collections[model_run_name]
-    error_total = get_rwse(scenario_err_arr)
-    lat_speed.plot(time_steps, error_total, label=model_run_name)
-lat_speed.set_ylabel('RWSE Lat.speed ($ms^{-1}$)')
-lat_speed.set_xlabel('Time horizon (s)')
-lat_speed.legend(loc='upper center', bbox_to_anchor=(0.5, -.2), ncol=5)
-# %%
-for model_run_name in model_run_names:
-    err_at_2s = long_speed_err_collections[model_run_name][:, -1].mean()**0.5
-    # print(model_run_name+' err_at_2s: ', err_at_2s)
-    print(round(err_at_2s, 2))
+    long_err_at_2s[model_run_name] = []
+    lat_err_at_2s[model_run_name] = []
 
-# %%
-# %%
-for model_run_name in model_run_names:
-    err_at_2s = lat_speed_err_collections[model_run_name][:, -1].mean()**0.5
-    # print(model_run_name+' err_at_2s: ', err_at_2s)
-    print(round(err_at_2s, 2))
+for veh_axis in veh_axiss:
+    """
+    rwse long_speed
+    """
+    long_err_collections = {}
+    for model_run_name in model_run_names:
+        long_err_collections[model_run_name] = get_scenario_err(veh_axis, 'vel', model_run_name)
+    for model_run_name in model_run_names:
+        scenario_err_arr = long_err_collections[model_run_name]
+        error_total = get_rwse(scenario_err_arr)
+        long_err_at_2s[model_run_name].append(error_total[-1].round(2))
+
+    """
+    rwse lat_speed
+    """
+    lat_err_collections = {}
+    for model_run_name in model_run_names:
+        lat_err_collections[model_run_name] = get_scenario_err(veh_axis, 'act_lat', model_run_name)
+
+    for model_run_name in model_run_names:
+        scenario_err_arr = lat_err_collections[model_run_name]
+        error_total = get_rwse(scenario_err_arr)
+        lat_err_at_2s[model_run_name].append(error_total[-1].round(2))
+
+print(long_err_at_2s)
+print(lat_err_at_2s)
