@@ -95,7 +95,7 @@ model_val_run_map = {
     'lstm_001': val_run_name, #
     }
 model_legend_map = {
-    'cae_014': 'CAE', #
+    'cae_014': 'RNN Encoder–Decoder', #
     'mlp_001': 'MLP', #
     'lstm_001': 'LSTM', #
     }
@@ -151,7 +151,7 @@ for model_run_name in model_run_names:
     else:
         axs[1].plot(time_steps, error_total, label=model_run_name)
 
-# plt.savefig("rwse_models.png", dpi=500)
+plt.savefig("rwse_models.png", dpi=500)
 # %%
 
 """ ####################################### compare step_sizes #######################################"""

@@ -89,7 +89,7 @@ for snap_i in range(snap_count):
     true_plans.append(true_plan)
     best_plan_indxs.append(best_plan_indx)
 
-# 7 %%
+#  %%
 """ Plan visualisation figure """
 time_steps = np.linspace(0, 3.9, 40)
 ts_h = time_steps[:20]
@@ -98,7 +98,7 @@ subplot_xcount = 5
 subplot_ycount = 3
 fig, axs = plt.subplots(subplot_ycount, subplot_xcount, figsize=(18,9))
 fig.tight_layout()
-fig.subplots_adjust(left=None, bottom=None, right=None, top=None, wspace=0.17, hspace=0.3)
+fig.subplots_adjust(left=None, bottom=None, right=None, top=None, wspace=0.17, hspace=0.1)
 
 axs[0, 0].set_ylabel('$\ddot x_e \; (ms^{-2})$', labelpad=-2)
 axs[1, 0].set_ylabel('$\ddot x_e \; (ms^{-2})$', labelpad=-2)
@@ -136,7 +136,7 @@ for subplot_xi in range(subplot_xcount):
             axs[subplot_yi, subplot_xi].xaxis.set_tick_params(which="both", top=False)
             axs[subplot_yi, subplot_xi].set_xlabel('Time (s)')
 
-#x %%
+# x%%
 for snap_i in range(snap_count):
     best_plan_indx = best_plan_indxs[snap_i] # index of chosen plan
 
@@ -153,11 +153,11 @@ for snap_i in range(snap_count):
                 #         axs[snap_i, act_axis].plot(ts_f, pred_plan, color='grey', linewidth=0.9)
 
                 true_plan = veh_true_plans[0, :, act_axis]
-                axs[snap_i, act_axis].plot(ts_f, true_plan[19:], color='red', linestyle='--')
-                axs[snap_i, act_axis].plot(ts_h, true_plan[:20], color='black', linestyle='--')
+                axs[snap_i, act_axis].plot(ts_f, true_plan[19:], color='red', linestyle='--', linewidth=2.5)
+                axs[snap_i, act_axis].plot(ts_h, true_plan[:20], color='black', linestyle='--', linewidth=2.5)
 
                 pred_plan = veh_pred_plans[best_plan_indx, :, act_axis]
-                axs[snap_i, act_axis].plot(ts_f, pred_plan, color='green')
+                axs[snap_i, act_axis].plot(ts_f, pred_plan, color='green', linewidth=2.5)
         else:
             # only plot long.acc
             for trace_i in range(50):
@@ -165,8 +165,8 @@ for snap_i in range(snap_count):
                 axs[snap_i, veh_axis+1].plot(ts_f, pred_plan, color='grey',
                                                         linewidth=0.9, alpha=0.6, linestyle='-')
             true_plan = veh_true_plans[0, :, 0]
-            axs[snap_i, veh_axis+1].plot(ts_f, true_plan[19:], color='red', linestyle='--')
-            axs[snap_i, veh_axis+1].plot(ts_h, true_plan[:20], color='black', linestyle='--')
+            axs[snap_i, veh_axis+1].plot(ts_f, true_plan[19:], color='red', linestyle='--', linewidth=2.5)
+            axs[snap_i, veh_axis+1].plot(ts_h, true_plan[:20], color='black', linestyle='--', linewidth=2.5)
 plt.savefig("plans.png", dpi=500)
 
 # %%
