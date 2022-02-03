@@ -202,7 +202,7 @@ class MCEVALMultiStep():
         _gen_actions, _ = self.policy.cae_inference([states, conds])
         gen_actions = self.policy.gen_action_seq(_gen_actions, conds)
         bc_ders = self.policy.get_boundary_condition(true_trace_history)
-        action_plans = self.policy.construct_policy(gen_actions, bc_ders)
+        action_plans = self.policy.get_pred_vehicle_plans(gen_actions, bc_ders)
         state_0 = true_trace_history[:, -1, :]
         pred_trace = self.fs.forward_sim(state_0, action_plans)
         return pred_trace

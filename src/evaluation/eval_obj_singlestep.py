@@ -20,11 +20,6 @@ class ForwardSimSingleStep():
 
         dx = dv*self.STEP_SIZE
         return dx
-        state_t_ii[:, self.indxs.indx_m['pc']] += act_m[:, 1]*self.STEP_SIZE
-        lc_left = state_t_ii[:, self.indxs.indx_m['pc']] > self.max_pc
-        state_t_ii[lc_left, self.indxs.indx_m['pc']] = self.min_pc
-        lc_right = state_t_ii[:, self.indxs.indx_m['pc']] < self.min_pc
-        state_t_ii[lc_right, self.indxs.indx_m['pc']] = self.max_pc
 
     def step(self, state_t_i, state_t_ii, act_m):
         state_t_ii[:, self.indxs.indx_m['act_long']] = act_m[:, 0]

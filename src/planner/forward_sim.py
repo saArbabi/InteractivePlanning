@@ -61,6 +61,8 @@ class ForwardSim():
         return state_t_ii
 
     def forward_sim(self, state_0, action_plans):
+        """Used for rwse
+        """
         # state_0 is initial traffic state
         # s_0 >> a_0 >> s_1 >> a_1 >> s_2 >> a_2 >> s_3...
         trajs_n = action_plans[0].shape[0]

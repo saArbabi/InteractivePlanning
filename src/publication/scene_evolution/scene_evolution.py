@@ -77,7 +77,7 @@ for snap_i in range(snap_count):
                         _gen_actions, conds_i)
 
     bc_ders = policy.get_boundary_condition(trace_history)
-    action_plans = policy.construct_policy(gen_actions, bc_ders)
+    action_plans = policy.get_pred_vehicle_plans(gen_actions, bc_ders)
     best_plan, best_plan_indx = policy.plan_evaluation_func(action_plans[0], _gen_actions, gmm_m)
 
     true_plan = []

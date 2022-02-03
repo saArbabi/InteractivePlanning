@@ -23,25 +23,6 @@ spec = pd.read_csv('./src/datasets/episode_spec.txt', delimiter=' ',
                                                         header=None, names=spec_col)
 
 # %%
-"""use this to plot ??? incomplete
-"""
-spec[spec['episode_id'] == 2215]
-plt.plot(m_df[m_df['episode_id'] == 2215]['vel'].values)
-plt.plot(f_df[f_df['episode_id'] == 2215]['vel'].values)
-plt.plot(fadj_df[fadj_df['episode_id'] == 2215]['vel'].values)
-fadj_df[fadj_df['episode_id'] == 2215]['vel']
-
-f_df[f_df['episode_id'] == 2215]['vel']
-plt.plot(m_df[m_df['episode_id'] == 967]['act_long'].values)
-# %%
-y_df['dx'].hist(bins=100)
-plt.xlabel('Distance headway ($m$)')
-plt.ylabel('Count of distance headway')
-plt.xlim((0, 100))
-plt.savefig("test.png", dpi=500)
-
-# %%
-
 # def trimFeatureVals(veh_df)
 def trimStatevals(_df, names):
     df = _df.copy() #only training set
