@@ -1,3 +1,17 @@
+"""
+This module uses the test dataset and MC simulations for model evaluation.
+Steps for MC evaluation a given model is as follows:
+    (1) read the eval_config file. This determines what mc experiments need to be run for
+    which model.
+    (2) load the testset for a given traffic desity. EvalDataObj contains the test data.
+    (3) divide the testset into snippets: past states and future states
+    (4) scale and then feed the testset to the model to compute actions
+    (5) turn the plans to states of interest (forward_sim)
+    (6) dump collected states for all the vehicels of interest in their respective model folders.
+        depending on the model, different rwse metrics are collected
+    (7) you can now compute rwse for different models in ./publication/quantitative
+
+"""
 import os
 # from planner import forward_sim
 # reload(forward_sim)
@@ -193,7 +207,7 @@ class MCEVALMultiStep():
         return true_collection, pred_collection
 
     def get_predicted_trace(self, states, conds, true_trace):
-        true_trace_history = np.repeat(\
+        trace_history = np.repeat(\
                 true_trace[:, :self.obs_n, 2:], self.traces_n, axis=0)
 
         states = np.repeat(states, self.traces_n, axis=0)
@@ -201,9 +215,9 @@ class MCEVALMultiStep():
 
         _gen_actions, _ = self.policy.cae_inference([states, conds])
         gen_actions = self.policy.gen_action_seq(_gen_actions, conds)
-        bc_ders = self.policy.get_boundary_condition(true_trace_history)
+        bc_ders = self.policy.get_boundary_condition(trace_history)
         action_plans = self.policy.get_pred_vehicle_plans(gen_actions, bc_ders)
-        state_0 = true_trace_history[:, -1, :]
+        state_0 = trace_history[:, -1, :]
         pred_trace = self.fs.forward_sim(state_0, action_plans)
         return pred_trace
 
@@ -243,7 +257,7 @@ class MCEVALMultiStep():
 
             self.policy = self.load_policy(model_name, model_type, epoch)
             i = np.where(self.episode_ids == self.episode_in_prog)[0]
-            i += 1 if self.current_episode_count > 0 else i
+            i += 1 if self.current_episode_count > 0 else i # start with the next episode 
             while self.current_episode_count < self.target_episode_count:
                 self.episode_in_prog = int(self.episode_ids[i])
                 collections = self.run_episode(self.episode_in_prog)

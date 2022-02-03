@@ -1,3 +1,7 @@
+"""Use this module to check if agent plans result in a direct collision
+with another vehicle.
+
+"""
 import sys
 sys.path.insert(0, './src')
 import numpy as np

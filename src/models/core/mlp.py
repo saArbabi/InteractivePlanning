@@ -1,3 +1,6 @@
+"""See paper: Deep Neural Networks for Markovian Interactive Scene Prediction in Highway Scenarios
+for implementation details.
+"""
 from tensorflow.keras.layers import Dense, Concatenate
 from keras import backend as K
 from models.core.abstract_model import  AbstractModel

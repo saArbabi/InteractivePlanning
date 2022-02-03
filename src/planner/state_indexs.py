@@ -1,4 +1,5 @@
 """
+This class contains the state index name to index number mpaaing. 
 state_col = ['vel', 'pc', 'act_long','act_lat',
                                      'vel', 'dx', 'act_long', 'act_lat',
                                      'vel', 'dx', 'act_long', 'act_lat',
@@ -34,5 +35,3 @@ class StateIndxs():
                 [self.indx_f['act_long'], self.indx_f['act_lat']],
                 [self.indx_fadj['act_long'], self.indx_fadj['act_lat']]]
         self.indxs = [self.indx_m, self.indx_y, self.indx_f, self.indx_fadj]
-
- 

@@ -5,8 +5,7 @@ from datetime import datetime
 from src.data.preprocessing.data_prep import DataPrep
 import pickle
 import matplotlib.pyplot as plt
-
-# %%
+ 
 class DataObj():
     dirName = './src/datasets/preprocessed/'
 
@@ -31,7 +30,7 @@ class DataObj():
     def loadPickledObj(self, dataFolderName):
         obj_names = ['states_train', 'targets_train', 'conditions_train',
                                     'states_val', 'targets_val', 'conditions_val']
-                                                    
+
         data_objs = []
         for item in obj_names:
             with open(self.dirName+dataFolderName+'/'+item, 'rb') as f:

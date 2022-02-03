@@ -1,3 +1,6 @@
+"""
+Use this module for evaluating step-wise LSTM and MLP-based models. 
+"""
 import sys
 sys.path.insert(0, './src')
 from evaluation.eval_obj import MCEVALMultiStep

@@ -1,3 +1,6 @@
+"""See paper: Learning Interaction-Aware Probabilistic Driver Behavior Models from Urban Scenarios
+for implementation details. 
+"""
 from tensorflow.keras.layers import Dense, LSTM, Concatenate
 from keras import backend as K
 from models.core.abstract_model import  AbstractModel

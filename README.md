@@ -1,4 +1,4 @@
-# My Paper Title
+# Paper intro
 
 This repository is the official implementation of InteractivePlanning
 <!-- # [I](https://arxiv.org/abs/2030.12345). -->
@@ -26,4 +26,3 @@ data_preliminaries.py to be further processed/sequenced prior to training by
 data_prep.py
 - the relevant data files are then saved into a folder with a unique id and config file.
 The train and validation sets are already scaled.
- 
