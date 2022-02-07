@@ -28,7 +28,6 @@ eval_obj.state_scaler, eval_obj.action_scaler = state_scaler, action_scaler
 # %%
 pred_collection = []
 true_collection = []
-episode_id = 2215
 eval_obj.episode_ids = data_obj.load_test_episode_ids('all_density')
 
 for episode_id in eval_obj.episode_ids.astype(int):
