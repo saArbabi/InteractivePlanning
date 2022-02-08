@@ -8,7 +8,7 @@ import pickle
 
 import numpy as np
 
-val_run_name = 'test'# the log file name will be val_run_name + traffic_density
+mc_run_name = 'test'# the log file name will be mc_run_name + traffic_density
 config_name = 'test'
 # config_name = 'study_step_size'
 # config_name = 'study_seq_len'
@@ -16,7 +16,7 @@ config_name = 'test'
 # config_name = 'study_guided_learning'
 
 # config_name = 'lstm_mlp'
-# val_run_name = 'epoch_50'
+# mc_run_name = 'epoch_50'
 eval_config_dir = './src/evaluation/models_eval/config_files/'+ config_name +'.json'
 
 def read_eval_config(config_name):
@@ -50,7 +50,7 @@ def main():
         eval_obj.state_scaler, eval_obj.action_scaler = state_scaler, action_scaler
 
         for traffic_density in traffic_densities:
-            eval_obj.val_run_name = val_run_name+traffic_density
+            eval_obj.mc_run_name = mc_run_name+traffic_density
             eval_obj.model_run_name = model_name+'_'+traffic_density
 
             eval_obj.episode_ids = data_obj.load_test_episode_ids(traffic_density)

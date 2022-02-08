@@ -12,10 +12,10 @@ def get_data_log_collections(model_val_run_map):
     true_collections = {}
     pred_collections = {}
     for model_name in list(model_val_run_map.keys()):
-        val_run_names = model_val_run_map[model_name]
-        for val_run_name in val_run_names:
+        mc_run_names = model_val_run_map[model_name]
+        for mc_run_name in mc_run_names:
             model_run_name = model_name
-            exp_dir = './src/models/experiments/'+model_name+'/' + val_run_name
+            exp_dir = './src/models/experiments/'+model_name+'/' + mc_run_name
 
             with open(exp_dir+'/true_collections.pickle', 'rb') as handle:
                 true_collections[model_run_name] = np.array(pickle.load(handle))
@@ -87,12 +87,12 @@ plt.rc('legend', fontsize=MEDIUM_SIZE)    # legend fontsize
 
 """ ####################################### compare CAE, MLP and LSTM #######################################"""
 
-val_run_name = ['all_density']
+mc_run_name = ['all_density']
 
 model_val_run_map = {
-    'cae_014': val_run_name, #
-    'mlp_001': val_run_name, #
-    'lstm_001': val_run_name, #
+    'cae_014': mc_run_name, #
+    'mlp_001': mc_run_name, #
+    'lstm_001': mc_run_name, #
     }
 model_legend_map = {
     'cae_014': 'RNN Encoder–Decoder', #
@@ -156,14 +156,14 @@ plt.savefig("rwse_models.png", dpi=500)
 
 """ ####################################### compare step_sizes #######################################"""
 
-val_run_name = ['all_density']
+mc_run_name = ['all_density']
 
-val_run_name = ['all_density']
+mc_run_name = ['all_density']
 model_val_run_map = {
-    'cae_001': val_run_name,  # "pred_step_n": 20, "step_size": 1
-    'cae_002': val_run_name,  # "pred_step_n": 10, "step_size": 2
-    'cae_003': val_run_name,  # "pred_step_n": 7, "step_size": 3
-    'cae_004': val_run_name  # "pred_step_n": 5, "step_size": 4
+    'cae_001': mc_run_name,  # "pred_step_n": 20, "step_size": 1
+    'cae_002': mc_run_name,  # "pred_step_n": 10, "step_size": 2
+    'cae_003': mc_run_name,  # "pred_step_n": 7, "step_size": 3
+    'cae_004': mc_run_name  # "pred_step_n": 5, "step_size": 4
     }
 model_legend_map = {
     'cae_001': '$\delta t=0.1\;s$',  # "pred_step_n": 20, "step_size": 1
@@ -226,12 +226,12 @@ for model_run_name in model_run_names:
 plt.savefig("rwse_step_size.png", dpi=500)
 # %%
 """ ####################################### compare step_sizes #######################################"""
-val_run_name = ['all_density']
+mc_run_name = ['all_density']
 model_val_run_map = {
-    'cae_007': val_run_name, # "pred_step_n": 1, "step_size": 3
-    'cae_005': val_run_name,  # "pred_step_n": 3, "step_size": 3
-    'cae_006': val_run_name, # "pred_step_n": 5, "step_size": 3
-    'cae_003': val_run_name, # "pred_step_n": 7, "step_size": 3
+    'cae_007': mc_run_name, # "pred_step_n": 1, "step_size": 3
+    'cae_005': mc_run_name,  # "pred_step_n": 3, "step_size": 3
+    'cae_006': mc_run_name, # "pred_step_n": 5, "step_size": 3
+    'cae_003': mc_run_name, # "pred_step_n": 7, "step_size": 3
     }
 model_legend_map = {
     'cae_007': '$N=1$',

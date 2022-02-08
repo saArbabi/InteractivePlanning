@@ -70,7 +70,7 @@ class MCEVALMultiStep():
             json.dump(self.eval_config, f, ensure_ascii=False, indent=4)
 
     def dump_mc_logs(self, model_name):
-        exp_dir = './src/models/experiments/'+model_name+'/'+self.val_run_name
+        exp_dir = './src/models/experiments/'+model_name+'/'+self.mc_run_name
         if not os.path.exists(exp_dir):
             os.makedirs(exp_dir)
 
@@ -93,7 +93,7 @@ class MCEVALMultiStep():
         self.eval_config['progress_logging'][self.model_run_name] = progress_logging
 
     def load_collections(self, model_name):
-        exp_dir = './src/models/experiments/'+model_name+'/'+self.val_run_name
+        exp_dir = './src/models/experiments/'+model_name+'/'+self.mc_run_name
         with open(exp_dir+'/true_collections.pickle', 'rb') as handle:
             self.true_collections = pickle.load(handle)
 
@@ -257,7 +257,7 @@ class MCEVALMultiStep():
 
             self.policy = self.load_policy(model_name, model_type, epoch)
             i = np.where(self.episode_ids == self.episode_in_prog)[0]
-            i += 1 if self.current_episode_count > 0 else i # start with the next episode 
+            i += 1 if self.current_episode_count > 0 else i # start with the next episode
             while self.current_episode_count < self.target_episode_count:
                 self.episode_in_prog = int(self.episode_ids[i])
                 collections = self.run_episode(self.episode_in_prog)

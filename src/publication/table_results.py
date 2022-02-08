@@ -8,51 +8,51 @@ indxs = StateIndxs()
 np.set_printoptions(suppress=True)
 # %%
 """ effect of guided learning """
-val_run_name = ['all_density']
+mc_run_name = ['all_density']
 
 model_val_run_map = {
-    # 'cae_003': val_run_name, #
-    # 'cae_010': val_run_name, # "allowed_error": 0.1
-    'cae_011': val_run_name, # "allowed_error": 0.2
-    # 'cae_012': val_run_name, # "allowed_error": 0.3
-    'cae_014': val_run_name, # "allowed_error": 0.4
+    # 'cae_003': mc_run_name, #
+    # 'cae_010': mc_run_name, # "allowed_error": 0.1
+    'cae_011': mc_run_name, # "allowed_error": 0.2
+    # 'cae_012': mc_run_name, # "allowed_error": 0.3
+    'cae_014': mc_run_name, # "allowed_error": 0.4
     }
 # %%
 """ effect of using different architectures """
-val_run_name = ['all_density']
+mc_run_name = ['all_density']
 
 model_val_run_map = {
-    # 'cae_003': val_run_name, #
-    # 'cae_008': val_run_name, #
-    'cae_009': val_run_name, # single decoder
+    # 'cae_003': mc_run_name, #
+    # 'cae_008': mc_run_name, #
+    'cae_009': mc_run_name, # single decoder
     }
 
 # %%
 """ compare CAE, MLP and LSTM """
-val_run_name = ['all_density']
+mc_run_name = ['all_density']
 
 model_val_run_map = {
-    'cae_003': val_run_name, #
-    'mlp_001': val_run_name, #
-    'lstm_001': val_run_name, #
+    'cae_003': mc_run_name, #
+    'mlp_001': mc_run_name, #
+    'lstm_001': mc_run_name, #
     }
 
 # %%
 """ No response dynamics considered """
-val_run_name = ['all_density']
+mc_run_name = ['all_density']
 
 model_val_run_map = {
-    'cae_013': val_run_name, #
+    'cae_013': mc_run_name, #
     }
 # %%
 
 true_collections = {}
 pred_collections = {}
 for model_name in list(model_val_run_map.keys()):
-    val_run_names = model_val_run_map[model_name]
-    for val_run_name in val_run_names:
-        model_run_name = model_name+'_'+val_run_name
-        exp_dir = './src/models/experiments/'+model_name+'/' + val_run_name
+    mc_run_names = model_val_run_map[model_name]
+    for mc_run_name in mc_run_names:
+        model_run_name = model_name+'_'+mc_run_name
+        exp_dir = './src/models/experiments/'+model_name+'/' + mc_run_name
 
         with open(exp_dir+'/true_collections.pickle', 'rb') as handle:
             true_collections[model_run_name] = np.array(pickle.load(handle))
