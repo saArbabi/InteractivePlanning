@@ -38,7 +38,7 @@ config = {
 "Note": "cae with guided learning"
 }
 data_objs = DataObj(config).loadData()
-train_input, val_input = data_objs[0:3], data_objs[3:]
+train_input, test_input = data_objs[0:3], data_objs[3:]
 # train_input[0][7].shape
 # train_input[0][7][0, -1, :]
 # train_input[2][7][0][0, 0, :]
@@ -87,13 +87,13 @@ class Trainer():
         with open(self.exp_dir+'/config.json', 'w', encoding='utf-8') as f:
             json.dump(config, f, ensure_ascii=False, indent=4)
 
-    def train(self, train_input, val_input, epochs):
+    def train(self, train_input, test_input, epochs):
         for epoch in range(epochs):
             t0 = time.time()
 
             self.epoch_count += 1
             self.model.train_loop(train_input)
-            self.model.test_loop(val_input)
+            self.model.test_loop(test_input)
 
             self.train_losses['train_llloss_m'].append(\
                     round(self.model.train_llloss_m.result().numpy().item(), 2))
@@ -142,14 +142,14 @@ model_trainer = Trainer()
 model_trainer.model_name = 'cae_'+'015'
 model_trainer.exp_dir = './src/models/experiments/'+model_trainer.model_name
 config
-# model_trainer.train(train_input, val_input, epochs=1)
+# model_trainer.train(train_input, test_input, epochs=1)
 # model_trainer.load_pre_trained(epoch_count='50')
 # %%
 ################## Train ##################
 ################## ##### ##################
 ################## ##### ##################
 ################## ##### ##################
-model_trainer.train(train_input, val_input, epochs=10)
+model_trainer.train(train_input, test_input, epochs=10)
 ################## ##### ##################
 ################## ##### ##################
 ################## ##### ##################

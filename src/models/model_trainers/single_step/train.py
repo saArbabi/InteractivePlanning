@@ -40,7 +40,7 @@ from data.preprocessing import data_obj
 reload(data_prep)
 reload(data_obj)
 data_objs = DataObj(config).loadData()
-train_input, val_input = data_objs[0:3], data_objs[3:]
+train_input, test_input = data_objs[0:3], data_objs[3:]
 # train_input[0][7].shape
 # train_input[0][7][0, -1, :]
 # train_input[2][7][0][0, 0, :]
@@ -92,13 +92,13 @@ class Trainer():
         with open(self.exp_dir+'/config.json', 'w', encoding='utf-8') as f:
             json.dump(config, f, ensure_ascii=False, indent=4)
 
-    def train(self, train_input, val_input, epochs):
+    def train(self, train_input, test_input, epochs):
         for epoch in range(epochs):
             t0 = time.time()
 
             self.epoch_count += 1
             self.model.train_loop(train_input)
-            self.model.test_loop(val_input)
+            self.model.test_loop(test_input)
 
             self.train_losses['train_llloss_m'].append(\
                     round(self.model.train_llloss_m.result().numpy().item(), 2))
@@ -134,19 +134,19 @@ model_type = 'lstm'
 model_trainer = Trainer(model_type)
 model_trainer.exp_dir = './src/models/experiments/'+model_name
 config['model_name'] = model_name
-# model_trainer.train(train_input, val_input, epochs=1)
+# model_trainer.train(train_input, test_input, epochs=1)
 # model_trainer.load_pre_trained(epoch_count='20')
-model_trainer.train(_train_input, _val_input, epochs=1)
+model_trainer.train(_train_input, _test_input, epochs=1)
 
 # %%
 
 if model_trainer.model_type == 'mlp':
     _train_input = [train_input[0][1][:,-1,:], train_input[1][1][0][:,0,:]]
-    _val_input = [val_input[0][1][:,-1,:], val_input[1][1][0][:,0,:]]
+    _test_input = [test_input[0][1][:,-1,:], test_input[1][1][0][:,0,:]]
 
 if model_trainer.model_type == 'lstm':
     _train_input = [train_input[0][1], train_input[1][1][0][:,0,:]]
-    _val_input = [val_input[0][1], val_input[1][1][0][:,0,:]]
+    _test_input = [test_input[0][1], test_input[1][1][0][:,0,:]]
 
 
 # %%
@@ -154,7 +154,7 @@ if model_trainer.model_type == 'lstm':
 ################## ##### ##################
 ################## ##### ##################
 ################## ##### ##################
-model_trainer.train(_train_input, _val_input, epochs=10)
+model_trainer.train(_train_input, _test_input, epochs=10)
 ################## ##### ##################
 ################## ##### ##################
 ################## ##### ##################
