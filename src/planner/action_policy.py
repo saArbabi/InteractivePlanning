@@ -146,13 +146,13 @@ class Policy():
         plans_utility = -(jerk) + w*plan_likelihood - collision_cost
         return plans_utility
 
-    def state_transition_function(self, state_0, action_plans, traj_n):
+    def state_transition_function(self, state_0, action_plans):
         """Used for assigning collision cost to agent plans
         Note: position of other cars are ego centric
         """
         state_0 = state_0.copy()
         # pred_trace: [dx_y, dx_f, dx_fadj, dy_y, dy_f, dy_fadj]
-        pred_trace = np.zeros([traj_n, self.pred_h+1, 6])
+        pred_trace = np.zeros([self.traj_n, self.pred_h+1, 6])
         vel_m = state_0[:, self.indxs.indx_m['vel']]
         vel_y = state_0[:, self.indxs.indx_y['vel']]
         vel_f = state_0[:, self.indxs.indx_f['vel']]
