@@ -26,6 +26,17 @@ state_scaler, action_scaler = loadScalers() # will set the scaler attributes
 eval_obj.states_arr, eval_obj.targets_arr = states_arr, targets_arr
 eval_obj.state_scaler, eval_obj.action_scaler = state_scaler, action_scaler
 # %%
+"""Load policy
+"""
+model_name = 'cae_003'
+model_type = 'CAE'
+epoch = 50
+traj_n = 100
+
+policy = eval_obj.load_policy(model_name, model_type, epoch)
+policy.traj_n = traj_n
+
+# %%
 pred_collection = []
 true_collection = []
 eval_obj.episode_ids = data_obj.load_test_episode_ids('all_density')
@@ -59,13 +70,14 @@ for episode_id in eval_obj.episode_ids.astype(int):
             action_plans = policy.get_pred_vehicle_plans(gen_actions, bc_ders)
 
             pred_distances = policy.state_transition_function(trace_history[:, -1, :], \
-                                                             action_plans, traj_n)
-
+                                                             action_plans,
+                                                             policy.traj_n)
             true_acts = []
             for indx_act in indxs.indx_acts:
                 true_acts.append(true_trace[:, 19:, indx_act[0]+2:indx_act[1]+3])
             true_distances = policy.state_transition_function(trace_history[0:1, -1, :], \
-                                                             true_acts, 1)
+                                                             true_acts,
+                                                             1)
 
             plan_likelihood = policy.get_plan_likelihoods(_gen_actions, gmm_m)
 
@@ -84,33 +96,40 @@ for episode_id in eval_obj.episode_ids.astype(int):
 pred_collection = np.array(pred_collection)
 true_collection = np.array(true_collection)
 # %%
-true_collection70 = true_collection.flatten().copy()
-pred_collection70 = pred_collection.flatten().copy()
+pred_collection.shape
+true_collection.shape
+true_collection70 = true_collection[:, :, -1].flatten().copy()
+pred_collection70 = pred_collection[:, :, -1].flatten().copy()
 true_collection70 = true_collection70[true_collection70<70]
 pred_collection70 = pred_collection70[pred_collection70<70]
 true_collection70.min()
 pred_collection70.min()
 # %%
-params = {
-          'font.size' : 20,
-          'font.family' : 'EB Garamond',
-          }
-plt.rcParams.update(params)
-plt.style.use(['science','ieee'])
+""" plot setup
+"""
+plt.style.use('ieee')
+plt.rcParams["font.family"] = "Times New Roman"
+MEDIUM_SIZE = 7
+plt.rc('font', size=MEDIUM_SIZE)          # controls default text sizes
+plt.rc('axes', labelsize=MEDIUM_SIZE)    # fontsize of the x and y labels
+# %%
 
-_ = plt.hist(pred_collection70.flatten(), bins=200, alpha=0.5, label='Agent plans')
-_ = plt.hist(true_collection70.flatten(), bins=200, alpha=0.5, label='Human plans')
+
+_ = plt.hist(pred_collection70.flatten(), bins=50, alpha=0.5, label='Agent')
+_ = plt.hist(true_collection70.flatten(), bins=50, alpha=0.5, label='Human')
 plt.plot([3.5, 3.5], [0, 1000], color='black', linestyle='--')
-plt.plot([0.49, 0.49], [0, 1000], color='red', linestyle='-')
-plt.plot([0.53, 0.53], [0, 1000], color='green', linestyle='-')
+# plt.plot([0.49, 0.49], [0, 1000], color='red', linestyle='-')
+# plt.plot([0.53, 0.53], [0, 1000], color='green', linestyle='-')
 
-plt.ylim(0, 1000)
+plt.ylim(0,200)
 plt.xlim(-3, 70)
 plt.xlabel('Vehicle distance (m)')
 plt.ylabel('Histogram count')
 
 plt.plot()
-plt.legend(loc='upper right')
+plt.legend(loc='upper right', ncol=1, edgecolor='black')
+plt.savefig("plan_histogram.png", dpi=500, bbox_inches='tight')
+# %%
 # plt.savefig("plan_histogram.png", dpi=500)
 
 # %%

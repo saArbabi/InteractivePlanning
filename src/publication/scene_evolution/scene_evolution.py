@@ -78,8 +78,17 @@ for snap_i in range(snap_count):
 
     bc_ders = policy.get_boundary_condition(trace_history)
     action_plans = policy.get_pred_vehicle_plans(gen_actions, bc_ders)
-    best_plan, best_plan_indx = policy.plan_evaluation_func(action_plans[0], _gen_actions, gmm_m)
 
+    plan_likelihood = policy.get_plan_likelihoods(_gen_actions, gmm_m)
+    abs_distances = policy.state_transition_function(\
+                                            trace_history[:, -1, :],\
+                                             action_plans,
+                                             policy.traj_n)
+    plans_utility = policy.plan_evaluation_func(action_plans[0],
+                                             plan_likelihood,
+                                             abs_distances)
+
+    best_plan_indx = np.argmax(plans_utility)
     true_plan = []
     for veh_axis in indxs.indxs:
         act_axis = np.array([veh_axis['act_long'], veh_axis['act_lat']])+2
@@ -96,27 +105,30 @@ ts_h = time_steps[:20]
 ts_f = time_steps[19:]
 subplot_xcount = 5
 subplot_ycount = 3
-fig, axs = plt.subplots(subplot_ycount, subplot_xcount, figsize=(18,9))
+fig, axs = plt.subplots(subplot_ycount, subplot_xcount, figsize=(18,11))
 fig.tight_layout()
-fig.subplots_adjust(left=None, bottom=None, right=None, top=None, wspace=0.17, hspace=0.1)
+fig.subplots_adjust(left=None, bottom=None, right=None, top=None, wspace=0.17, hspace=0.3)
 
-axs[0, 0].set_ylabel('$\ddot x_e \; (ms^{-2})$', labelpad=-2)
-axs[1, 0].set_ylabel('$\ddot x_e \; (ms^{-2})$', labelpad=-2)
-axs[2, 0].set_ylabel('$\ddot x_e \; (ms^{-2})$', labelpad=-2)
+axs[0, 0].set_ylabel('$\mathrm{\ddot x_e \; (ms^{-2})}$', labelpad=-2)
+axs[1, 0].set_ylabel('$\mathrm{\ddot x_e \; (ms^{-2})}$', labelpad=-2)
+axs[2, 0].set_ylabel('$\mathrm{\ddot x_e \; (ms^{-2})}$', labelpad=-2)
 
-axs[0, 1].set_ylabel('$\dot y_e \; (ms^{-1})$', labelpad=-2)
-axs[1, 1].set_ylabel('$\dot y_e \; (ms^{-1})$', labelpad=-2)
-axs[2, 1].set_ylabel('$\dot y_e \; (ms^{-1})$', labelpad=-2)
+axs[0, 1].set_ylabel('$\mathrm{\dot y_e \; (ms^{-1})}$', labelpad=-2)
+axs[1, 1].set_ylabel('$\mathrm{\dot y_e \; (ms^{-1})}$', labelpad=-2)
+axs[2, 1].set_ylabel('$\mathrm{\dot y_e \; (ms^{-1})}$', labelpad=-2)
 
-axs[0, 2].set_ylabel('$\ddot x_{v_1} \; (ms^{-2})$', labelpad=-2)
-axs[1, 2].set_ylabel('$\ddot x_{v_1} \; (ms^{-2})$', labelpad=-2)
-axs[2, 2].set_ylabel('$\ddot x_{v_1} \; (ms^{-2})$', labelpad=-2)
-axs[0, 3].set_ylabel('$\ddot x_{v_2} \; (ms^{-2})$', labelpad=-2)
-axs[1, 3].set_ylabel('$\ddot x_{v_2} \; (ms^{-2})$', labelpad=-2)
-axs[2, 3].set_ylabel('$\ddot x_{v_2} \; (ms^{-2})$', labelpad=-2)
-axs[0, 4].set_ylabel('$\ddot x_{v_3} \; (ms^{-2})$', labelpad=-2)
-axs[1, 4].set_ylabel('$\ddot x_{v_3} \; (ms^{-2})$', labelpad=-2)
-axs[2, 4].set_ylabel('$\ddot x_{v_3} \; (ms^{-2})$', labelpad=-2)
+axs[0, 2].set_ylabel('$\mathrm{\ddot x_{v_1} \; (ms^{-2})}$', labelpad=-2)
+axs[1, 2].set_ylabel('$\mathrm{\ddot x_{v_1} \; (ms^{-2})}$', labelpad=-2)
+axs[2, 2].set_ylabel('$\mathrm{\ddot x_{v_1} \; (ms^{-2})}$', labelpad=-2)
+
+axs[0, 3].set_ylabel('$\mathrm{\ddot x_{v_2} \; (ms^{-2})}$', labelpad=-2)
+axs[1, 3].set_ylabel('$\mathrm{\ddot x_{v_2} \; (ms^{-2})}$', labelpad=-2)
+axs[2, 3].set_ylabel('$\mathrm{\ddot x_{v_2} \; (ms^{-2})}$', labelpad=-2)
+
+axs[0, 4].set_ylabel('$\mathrm{\ddot x_{v_3} \; (ms^{-2})}$', labelpad=-2)
+axs[1, 4].set_ylabel('$\mathrm{\ddot x_{v_3} \; (ms^{-2})}$', labelpad=-2)
+axs[2, 4].set_ylabel('$\mathrm{\ddot x_{v_3} \; (ms^{-2})}$', labelpad=-2)
+# axs[2, 4].set_ylabel('vdvdvd', labelpad=-2)
 
 for subplot_xi in range(subplot_xcount):
     for subplot_yi in range(subplot_ycount):
@@ -128,13 +140,14 @@ for subplot_xi in range(subplot_xcount):
         axs[subplot_yi, subplot_xi].xaxis.set_tick_params(which="both", top=False)
         axs[subplot_yi, subplot_xi].yaxis.set_tick_params(which="both", right=False)
         # axs[subplot_yi, subplot_xi].yaxis.set_tick_params(labelright='off')
-        if subplot_yi < 2:
-            axs[subplot_yi, subplot_xi].set_xticklabels([])
-            axs[subplot_yi, subplot_xi].get_xaxis().set_visible(False)
-            axs[subplot_yi, subplot_xi].spines['bottom'].set_visible(False)
-        if subplot_yi == 2:
-            axs[subplot_yi, subplot_xi].xaxis.set_tick_params(which="both", top=False)
-            axs[subplot_yi, subplot_xi].set_xlabel('Time (s)')
+        axs[subplot_yi, subplot_xi].xaxis.set_tick_params(which="both", top=False)
+        axs[subplot_yi, subplot_xi].set_xlabel('Time (s)')
+        # if subplot_yi < 2:
+            # axs[subplot_yi, subplot_xi].set_xticklabels([])
+            # axs[subplot_yi, subplot_xi].get_xaxis().set_visible(False)
+            # axs[subplot_yi, subplot_xi].spines['bottom'].set_visible(False)
+        # if subplot_yi == 2:
+
 
 # x%%
 for snap_i in range(snap_count):
@@ -161,33 +174,48 @@ for snap_i in range(snap_count):
         else:
             # only plot long.acc
             for trace_i in range(50):
+
                 pred_plan = veh_pred_plans[trace_i, :, 0]
-                axs[snap_i, veh_axis+1].plot(ts_f, pred_plan, color='grey',
+                if pred_plan.max() < 2:
+                    axs[snap_i, veh_axis+1].plot(ts_f, pred_plan, color='grey',
                                                         linewidth=0.9, alpha=0.6, linestyle='-')
             true_plan = veh_true_plans[0, :, 0]
             axs[snap_i, veh_axis+1].plot(ts_f, true_plan[19:], color='red', linestyle='--', linewidth=2.5)
             axs[snap_i, veh_axis+1].plot(ts_h, true_plan[:20], color='black', linestyle='--', linewidth=2.5)
-plt.savefig("plans.png", dpi=500)
+
+
+plt.savefig("plans.png", dpi=800)
+
 
 # %%
 """
 #######################################  Scenario intro #######################################
 """
-params = {
-          'font.size' : 20,
-          'font.family' : 'EB Garamond',
-          }
-plt.rcParams.update(params)
-plt.style.use(['science','ieee'])
+""" plot setup
+"""
+plt.style.use('ieee')
+plt.rcParams["font.family"] = "Times New Roman"
 MEDIUM_SIZE = 14
-LARGE_SIZE = 16
-
 plt.rc('font', size=MEDIUM_SIZE)          # controls default text sizes
-plt.rc('axes', titlesize=LARGE_SIZE)     # fontsize of the axes title
-plt.rc('axes', labelsize=LARGE_SIZE)    # fontsize of the x and y labels
-plt.rc('xtick', labelsize=MEDIUM_SIZE)    # fontsize of the tick labels
-plt.rc('ytick', labelsize=MEDIUM_SIZE)    # fontsize of the tick labels
-plt.rc('legend', fontsize=MEDIUM_SIZE)    # legend fontsize
+plt.rc('axes', labelsize=MEDIUM_SIZE)    # fontsize of the x and y labels
+
+# %%
+#
+# params = {
+#           'font.size' : 20,
+#           'font.family' : 'EB Garamond',
+#           }
+# plt.rcParams.update(params)
+# plt.style.use(['science','ieee'])
+# MEDIUM_SIZE = 14
+# LARGE_SIZE = 16
+#
+# plt.rc('font', size=MEDIUM_SIZE)          # controls default text sizes
+# plt.rc('axes', titlesize=LARGE_SIZE)     # fontsize of the axes title
+# plt.rc('axes', labelsize=LARGE_SIZE)    # fontsize of the x and y labels
+# plt.rc('xtick', labelsize=MEDIUM_SIZE)    # fontsize of the tick labels
+# plt.rc('ytick', labelsize=MEDIUM_SIZE)    # fontsize of the tick labels
+# plt.rc('legend', fontsize=MEDIUM_SIZE)    # legend fontsize
 
 from publication.scene_evolution import viewer
 reload(viewer)
@@ -196,7 +224,7 @@ from publication.scene_evolution.viewer import Viewer
 plot_viewer = Viewer(env.trace_log)
 plot_viewer.set_up_traffic_intro_fig()
 plot_viewer.draw_speeds(state_arr[:, 2:])
-plt.savefig("speeds.png", dpi=500)
+plt.savefig("speeds.png", dpi=500, bbox_inches='tight')
 # %%
 """
 #######################################  Trajectory vis #######################################
@@ -240,5 +268,12 @@ plot_viewer = Viewer(env.trace_log)
 plot_viewer.set_up_traffic_fig()
 plot_viewer.set_up_profile_fig()
 plot_viewer.draw_plots()
-plot_viewer.traffic_fig.savefig("traffic_fig.png", dpi=500)
-plot_viewer.state_profile_fig.savefig("state_profile_fig.png", dpi=500)
+
+plot_viewer.speed_ax.legend(['Human', 'Agent'],
+                      ncol=1, edgecolor='black')
+plot_viewer.scene_t1_ax.legend(['Human', 'Agent'],
+                      ncol=1, edgecolor='black')
+
+plot_viewer.traffic_fig.savefig("traffic_fig.png", dpi=500, bbox_inches='tight')
+
+plot_viewer.state_profile_fig.savefig("state_profile_fig.png", dpi=500, bbox_inches='tight')

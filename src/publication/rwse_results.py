@@ -65,23 +65,13 @@ def get_rwse(scenario_err_arr):
     # mean across all snippets (axis=0)
     return np.mean(scenario_err_arr, axis=0)**0.5
 # %%
-plt.rcParams['text.latex.preamble']=[r"\usepackage{lmodern}"]
-#Options
-params = {
-          'font.size' : 20,
-          'font.family' : 'EB Garamond',
-          }
-plt.rcParams.update(params)
-plt.style.use(['science','ieee'])
+""" plot setup
+"""
+plt.style.use('ieee')
+plt.rcParams["font.family"] = "Times New Roman"
 MEDIUM_SIZE = 14
-LARGE_SIZE = 16
-
 plt.rc('font', size=MEDIUM_SIZE)          # controls default text sizes
-plt.rc('axes', titlesize=LARGE_SIZE)     # fontsize of the axes title
-plt.rc('axes', labelsize=LARGE_SIZE)    # fontsize of the x and y labels
-plt.rc('xtick', labelsize=MEDIUM_SIZE)    # fontsize of the tick labels
-plt.rc('ytick', labelsize=MEDIUM_SIZE)    # fontsize of the tick labels
-plt.rc('legend', fontsize=MEDIUM_SIZE)    # legend fontsize
+plt.rc('axes', labelsize=MEDIUM_SIZE)
 
 # %%
 
@@ -104,20 +94,20 @@ model_run_names = list(true_collections.keys())
 
 
 time_steps = np.linspace(0, 2., 21)
-fig, axs = plt.subplots(1, 2, figsize=(9,3.5))
+fig, axs = plt.subplots(1, 2, figsize=(9,4))
 fig.subplots_adjust(left=None, bottom=None, right=None, top=None, wspace=0.3, hspace=None)
 for ax in axs:
     ax.set_xlim([0,2.1])
 
 max_val = 1.1
 axs[0].set_xlabel('Time horizon (s)')
-axs[0].set_ylabel('$RWSE_x \; (m)$')
+axs[0].set_ylabel('$RWSE_x$ (m)')
 axs[0].yaxis.set_ticks(np.arange(0, 1.6, 0.5))
 axs[0].set_ylim([-0.05, max_val])
 
 max_val = 1.6
 axs[1].set_xlabel('Time horizon (s)')
-axs[1].set_ylabel('$RWSE_y \; (m)$')
+axs[1].set_ylabel('$RWSE_y$ (m)')
 axs[1].yaxis.set_ticks(np.arange(0, 1.6, 0.5))
 axs[1].set_ylim([-0.05, max_val])
 
@@ -135,7 +125,7 @@ for model_run_name in model_run_names:
     else:
         axs[0].plot(time_steps, error_total, label=model_run_name)
 
-axs[0].legend(list(model_legend_map.values()), loc='upper left')
+axs[0].legend(list(model_legend_map.values()), loc='upper left', edgecolor='black')
 
 lat_err_collections = {}
 for model_run_name in model_run_names:
@@ -151,7 +141,7 @@ for model_run_name in model_run_names:
     else:
         axs[1].plot(time_steps, error_total, label=model_run_name)
 
-plt.savefig("rwse_models.png", dpi=500)
+plt.savefig("rwse_models.png", dpi=500, bbox_inches='tight')
 # %%
 
 """ ####################################### compare step_sizes #######################################"""
@@ -176,20 +166,20 @@ model_run_names = list(true_collections.keys())
 
 
 time_steps = np.linspace(0, 2., 21)
-fig, axs = plt.subplots(1, 2, figsize=(9,3.5))
+fig, axs = plt.subplots(1, 2, figsize=(9,4))
 fig.subplots_adjust(left=None, bottom=None, right=None, top=None, wspace=0.3, hspace=None)
 for ax in axs:
     ax.set_xlim([0,2.1])
 
 max_val = 2.2
 axs[0].set_xlabel('Time horizon (s)')
-axs[0].set_ylabel('$RWSE_x \; (m)$')
+axs[0].set_ylabel('$RWSE_x$ (m)')
 axs[0].yaxis.set_ticks(np.arange(0, max_val, 0.5))
 axs[0].set_ylim([-0.05, max_val])
 
 max_val = 3.2
 axs[1].set_xlabel('Time horizon (s)')
-axs[1].set_ylabel('$RWSE_y \; (m)$')
+axs[1].set_ylabel('$RWSE_y$ (m)')
 axs[1].yaxis.set_ticks(np.arange(0, max_val, 1))
 axs[1].set_ylim([-0.05, max_val])
 
@@ -207,7 +197,7 @@ for model_run_name in model_run_names:
     else:
         axs[0].plot(time_steps, error_total, label=model_run_name)
 
-axs[0].legend(list(model_legend_map.values()), loc='upper left')
+axs[0].legend(list(model_legend_map.values()), loc='upper left', edgecolor='black')
 
 lat_err_collections = {}
 for model_run_name in model_run_names:
@@ -223,7 +213,7 @@ for model_run_name in model_run_names:
     else:
         axs[1].plot(time_steps, error_total, label=model_run_name)
 
-plt.savefig("rwse_step_size.png", dpi=500)
+plt.savefig("rwse_step_size.png", dpi=500, bbox_inches='tight')
 # %%
 """ ####################################### compare step_sizes #######################################"""
 mc_run_name = ['all_density']
@@ -245,20 +235,20 @@ model_run_names = list(true_collections.keys())
 
 
 time_steps = np.linspace(0, 2., 21)
-fig, axs = plt.subplots(1, 2, figsize=(9,3.5))
+fig, axs = plt.subplots(1, 2, figsize=(9,4))
 fig.subplots_adjust(left=None, bottom=None, right=None, top=None, wspace=0.3, hspace=None)
 for ax in axs:
     ax.set_xlim([0,2.1])
 
 max_val = 2.2
 axs[0].set_xlabel('Time horizon (s)')
-axs[0].set_ylabel('$RWSE_x \; (m)$')
+axs[0].set_ylabel('$RWSE_x$ (m)')
 axs[0].yaxis.set_ticks(np.arange(0, max_val, 0.5))
 axs[0].set_ylim([-0.05, max_val])
 
 max_val = 3.2
 axs[1].set_xlabel('Time horizon (s)')
-axs[1].set_ylabel('$RWSE_y \; (m)$')
+axs[1].set_ylabel('$RWSE_y$ (m)')
 axs[1].yaxis.set_ticks(np.arange(0, max_val, 1))
 axs[1].set_ylim([-0.05, max_val])
 
@@ -276,7 +266,7 @@ for model_run_name in model_run_names:
     else:
         axs[0].plot(time_steps, error_total, label=model_run_name)
 
-axs[0].legend(list(model_legend_map.values()), loc='upper left')
+axs[0].legend(list(model_legend_map.values()), loc='upper left', edgecolor='black')
 
 lat_err_collections = {}
 for model_run_name in model_run_names:
@@ -292,4 +282,4 @@ for model_run_name in model_run_names:
     else:
         axs[1].plot(time_steps, error_total, label=model_run_name)
 
-# plt.savefig("rwse_sequence_length.png", dpi=500)
+plt.savefig("rwse_sequence_length.png", dpi=500, bbox_inches='tight')
