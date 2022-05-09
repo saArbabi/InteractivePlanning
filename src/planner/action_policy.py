@@ -220,7 +220,8 @@ class Policy():
         action_plans = self.get_pred_vehicle_plans(gen_actions, bc_ders)
 
         abs_distances = self.state_transition_function(trace_history[:, -1, :],\
-                                                  action_plans)
+                                                  action_plans,
+                                                  self.traj_n)
         plan_likelihood = self.get_plan_likelihoods(_gen_actions, gmm_m)
 
         plans_utility = self.plan_evaluation_func(action_plans[0],

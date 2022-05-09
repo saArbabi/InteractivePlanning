@@ -107,7 +107,7 @@ subplot_xcount = 5
 subplot_ycount = 3
 fig, axs = plt.subplots(subplot_ycount, subplot_xcount, figsize=(18,11))
 fig.tight_layout()
-fig.subplots_adjust(left=None, bottom=None, right=None, top=None, wspace=0.17, hspace=0.3)
+fig.subplots_adjust(left=None, bottom=None, right=None, top=None, wspace=0.2, hspace=0.3)
 
 axs[0, 0].set_ylabel('$\mathrm{\ddot x_e \; (ms^{-2})}$', labelpad=-2)
 axs[1, 0].set_ylabel('$\mathrm{\ddot x_e \; (ms^{-2})}$', labelpad=-2)
@@ -135,12 +135,12 @@ for subplot_xi in range(subplot_xcount):
         axs[subplot_yi, subplot_xi].set_ylim([-2.1, 2.1])
         axs[subplot_yi, subplot_xi].set_xlim([-0.2, 4])
         axs[subplot_yi, subplot_xi].set_yticks([-2, 0, 2])
-        axs[subplot_yi, subplot_xi].spines['top'].set_visible(False)
-        axs[subplot_yi, subplot_xi].spines['right'].set_visible(False)
-        axs[subplot_yi, subplot_xi].xaxis.set_tick_params(which="both", top=False)
-        axs[subplot_yi, subplot_xi].yaxis.set_tick_params(which="both", right=False)
+        # axs[subplot_yi, subplot_xi].spines['top'].set_visible(False)
+        # axs[subplot_yi, subplot_xi].spines['right'].set_visible(False)
+        # axs[subplot_yi, subplot_xi].xaxis.set_tick_params(which="both", top=False)
+        # axs[subplot_yi, subplot_xi].yaxis.set_tick_params(which="both", right=False)
         # axs[subplot_yi, subplot_xi].yaxis.set_tick_params(labelright='off')
-        axs[subplot_yi, subplot_xi].xaxis.set_tick_params(which="both", top=False)
+        # axs[subplot_yi, subplot_xi].xaxis.set_tick_params(which="both", top=False)
         axs[subplot_yi, subplot_xi].set_xlabel('Time (s)')
         # if subplot_yi < 2:
             # axs[subplot_yi, subplot_xi].set_xticklabels([])
@@ -149,7 +149,8 @@ for subplot_xi in range(subplot_xcount):
         # if subplot_yi == 2:
 
 
-# x%%
+
+# .%%
 for snap_i in range(snap_count):
     best_plan_indx = best_plan_indxs[snap_i] # index of chosen plan
 
@@ -170,7 +171,7 @@ for snap_i in range(snap_count):
                 axs[snap_i, act_axis].plot(ts_h, true_plan[:20], color='black', linestyle='--', linewidth=2.5)
 
                 pred_plan = veh_pred_plans[best_plan_indx, :, act_axis]
-                axs[snap_i, act_axis].plot(ts_f, pred_plan, color='green', linewidth=2.5)
+                axs[snap_i, act_axis].plot(ts_f, pred_plan, color='green', linewidth=2.5, label='Agent plan')
         else:
             # only plot long.acc
             for trace_i in range(50):
@@ -183,8 +184,7 @@ for snap_i in range(snap_count):
             axs[snap_i, veh_axis+1].plot(ts_f, true_plan[19:], color='red', linestyle='--', linewidth=2.5)
             axs[snap_i, veh_axis+1].plot(ts_h, true_plan[:20], color='black', linestyle='--', linewidth=2.5)
 
-
-plt.savefig("plans.png", dpi=800)
+plt.savefig("plans.svg", dpi=500)
 
 
 # %%
@@ -224,7 +224,7 @@ from publication.scene_evolution.viewer import Viewer
 plot_viewer = Viewer(env.trace_log)
 plot_viewer.set_up_traffic_intro_fig()
 plot_viewer.draw_speeds(state_arr[:, 2:])
-plt.savefig("speeds.png", dpi=500, bbox_inches='tight')
+plt.savefig("speeds.svg", dpi=500, bbox_inches='tight')
 # %%
 """
 #######################################  Trajectory vis #######################################
@@ -274,6 +274,6 @@ plot_viewer.speed_ax.legend(['Human', 'Agent'],
 plot_viewer.scene_t1_ax.legend(['Human', 'Agent'],
                       ncol=1, edgecolor='black')
 
-plot_viewer.traffic_fig.savefig("traffic_fig.png", dpi=500, bbox_inches='tight')
+plot_viewer.traffic_fig.savefig("traffic_fig.svg", dpi=1000, bbox_inches='tight')
 
-plot_viewer.state_profile_fig.savefig("state_profile_fig.png", dpi=500, bbox_inches='tight')
+plot_viewer.state_profile_fig.savefig("state_profile_fig.svg", dpi=1000, bbox_inches='tight')
