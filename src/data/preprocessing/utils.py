@@ -2,7 +2,6 @@ import pandas as pd
 import numpy as np
 from pathlib import Path
 import os
-
 def get_pc(p, Ex, Ey):
     """ a car's distance from the shadow point of target lane (lane the merging car
     merges into)
@@ -168,7 +167,7 @@ def get_o_df(o_df, veh_id, episode_id):
     veh_df = o_df.loc[o_df['id'] == veh_id].reset_index(drop = True)
     get_act_long(veh_df)
     get_past_action(veh_df)
-    veh_df['episode_id'] = episode_id
+    veh_df.loc[:, 'episode_id'] = episode_id
     return veh_df
 
 def get_dummyVals(episode_id, df_size):
@@ -225,7 +224,7 @@ def get_dxdv(glob_pos, m_df, veh_df, lane_cor, mveh_orientation):
         dx.append(dx_i)
 
     veh_df.loc[:, 'dx'] = dx
-    veh_df['episode_id'] = m_df['episode_id'].values
+    veh_df.loc[:, 'episode_id'] = m_df['episode_id'].values
     return m_df, veh_df
 
 def frmTrim(veh_df, frm_max, frm_min):
@@ -260,4 +259,4 @@ def get_past_action(veh_df):
     action_p = veh_df[action_names].iloc[:-1].values
     veh_df.drop(veh_df.index[0],  inplace=True)
     veh_df.reset_index(drop=True,  inplace=True)
-    veh_df[action_names_p] = pd.DataFrame(action_p)
+    veh_df.loc[:, action_names_p] = action_p
