@@ -120,7 +120,7 @@ def get_frm_breaks(df):
     else:
         return [0, df.shape[0]]
 
-def perform_extraction(counter):
+def perform_extraction():
     episode_spec = {}
     counter = 2926
     max_episdoe_count = counter * 2
@@ -222,6 +222,7 @@ def perform_extraction(counter):
                         # plt.title(title)
                         if counter == max_episdoe_count:
                             print('Extraction compete')
+                            return
 
                         else:
                             utils.data_saver(m_df, 'm_df_lk')
@@ -231,6 +232,7 @@ def perform_extraction(counter):
                             print(counter, ' ### lane change extracted ###')
 
                         counter += 1
-perform_extraction(counter)
+perform_extraction()
 # %%
- 
+2 * 2
+165 * 15 / 60

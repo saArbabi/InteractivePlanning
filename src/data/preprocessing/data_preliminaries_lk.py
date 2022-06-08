@@ -116,7 +116,7 @@ training_episodes.dtype
 o_trim_col = ['dx', 'act_long', 'act_lat', 'act_long_p', 'act_lat_p']
 m_trim_col = ['act_long', 'act_lat', 'act_long_p', 'act_lat_p']
 
-
+fadj_df.isnull().any()
 _m_df = trimStatevals(m_df, m_trim_col)
 _y_df = trimStatevals(y_df, o_trim_col)
 _f_df = trimStatevals(f_df, o_trim_col)
@@ -144,7 +144,6 @@ target_col = ['episode_id', 'act_long','act_lat',
                               'act_long','act_lat',
                               'act_long','act_lat',
                               'act_long','act_lat']
-
 vis_dataDistribution(state_arr, state_col)
 vis_dataDistribution(target_arr, target_col)
 # %%
@@ -152,7 +151,7 @@ np.random.seed(2020)
 
 all_episodes = np.unique(state_arr[:, 0]).astype('int64')
 len(all_episodes)
-validation_n = int(0.08*len(all_episodes))
+validation_n = int(0.10*len(all_episodes))
 validation_episodes = np.random.choice(all_episodes, validation_n, replace=False)
 training_episodes = np.setdiff1d(all_episodes, validation_episodes)
 len(validation_episodes)/len(all_episodes)

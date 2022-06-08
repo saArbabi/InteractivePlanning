@@ -131,11 +131,7 @@ class FutureDecoder(tf.keras.Model):
         self.dec_units = 128
         self.components_n = config['model_config']['components_n'] # number of Mixtures
         self.model_use = model_use # can be training or inference
-
-        if 'allowed_error' in config['model_config']:
-            self.allowed_error = config['model_config']['allowed_error']
-        else:
-            self.allowed_error = 0
+        self.allowed_error = config['model_config']['allowed_error']
         self.architecture_def()
 
     def architecture_def(self):
@@ -198,10 +194,13 @@ class FutureDecoder(tf.keras.Model):
         return tf.concat(items_list, axis=-1)
 
     def teacher_check(self, true_action, sampled_action):
-        error = tf.math.abs(tf.math.subtract(sampled_action, true_action))
-        less = tf.cast(tf.math.less(error, self.allowed_error), dtype='float')
-        greater = tf.cast(tf.math.greater_equal(error, self.allowed_error), dtype='float')
-        return  tf.math.add(tf.multiply(greater, true_action), tf.multiply(less, sampled_action))
+        if self.allowed_error:
+            error = tf.math.abs(tf.math.subtract(sampled_action, true_action))
+            less = tf.cast(tf.math.less(error, self.allowed_error), dtype='float')
+            greater = tf.cast(tf.math.greater_equal(error, self.allowed_error), dtype='float')
+            return  tf.math.add(tf.multiply(greater, true_action), tf.multiply(less, sampled_action))
+        else:
+            return true_action
 
     def sample_action_lik_____(self, gmm):
         action = gmm.sample(1)

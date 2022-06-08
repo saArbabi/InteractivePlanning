@@ -25,21 +25,23 @@ config = {
  "model_config": {
      "learning_rate": 1e-3,
      "components_n": 5,
-     "allowed_error": 0.5,
+     "allowed_error": 0,
     "batch_size": 512,
 
 },
 "data_config": {"obs_n": 20,
                 "pred_step_n": 7,
                 "step_size": 3,
-                "Note": ""
+                "Note": "kc and lk episodes."
 },
 "model_name": "NA",
-"Note": "cae with guided learning"
+"Note": "No GL."
 }
 data_objs = DataObj(config).loadData()
 train_input, test_input = data_objs[0:3], data_objs[3:]
-# train_input[0][7].shape
+train_input[0][7].shape
+# plt.hist(train_input[0][2][:, 0, -4])
+train_input[0][7].shape
 # train_input[0][7][0, -1, :]
 # train_input[2][7][0][0, 0, :]
 # train_input[1][7][0][0, 0, :]
@@ -139,7 +141,7 @@ class Trainer():
 
 tf.random.set_seed(2021)
 model_trainer = Trainer()
-model_trainer.model_name = 'cae_'+'015'
+model_trainer.model_name = 'cae_'+'016'
 model_trainer.exp_dir = './src/models/experiments/'+model_trainer.model_name
 config
 # model_trainer.train(train_input, test_input, epochs=1)
@@ -149,7 +151,7 @@ config
 ################## ##### ##################
 ################## ##### ##################
 ################## ##### ##################
-model_trainer.train(train_input, test_input, epochs=10)
+model_trainer.train(train_input, test_input, epochs=30)
 ################## ##### ##################
 ################## ##### ##################
 ################## ##### ##################

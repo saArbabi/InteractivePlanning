@@ -8,8 +8,8 @@ import pickle
 
 import numpy as np
 
-mc_run_name = 'test'# the log file name will be mc_run_name + traffic_density
-config_name = 'test'
+mc_run_name = ''# the log file name will be mc_run_name + traffic_density
+config_name = 'cae_016'
 # config_name = 'study_step_size'
 # config_name = 'study_seq_len'
 # config_name = 'cae_013'

@@ -74,6 +74,74 @@ plt.rc('font', size=MEDIUM_SIZE)          # controls default text sizes
 plt.rc('axes', labelsize=MEDIUM_SIZE)
 
 # %%
+""" #######################################
+The effect of using LC only dataset vs LC+LK dataset.
+This is only used in the response letter for the reviewers.
+#######################################"""
+mc_run_name = ['all_density']
+
+model_val_run_map = {
+    'cae_003': mc_run_name, #
+    'cae_016': mc_run_name, #
+    }
+model_legend_map = {
+    'cae_003': 'cae_003', #
+    'cae_016': 'cae_016' #
+    }
+true_collections, pred_collections = get_data_log_collections(model_val_run_map)
+model_run_names = list(true_collections.keys())
+
+
+time_steps = np.linspace(0, 2., 21)
+fig, axs = plt.subplots(1, 2, figsize=(9,4))
+fig.subplots_adjust(left=None, bottom=None, right=None, top=None, wspace=0.3, hspace=None)
+for ax in axs:
+    ax.set_xlim([0,2.1])
+
+max_val = 1.1
+axs[0].set_xlabel('Time horizon (s)')
+axs[0].set_ylabel('$RWSE_x$ (m)')
+axs[0].yaxis.set_ticks(np.arange(0, 1.6, 0.5))
+axs[0].set_ylim([-0.05, max_val])
+
+max_val = 1.6
+axs[1].set_xlabel('Time horizon (s)')
+axs[1].set_ylabel('$RWSE_y$ (m)')
+axs[1].yaxis.set_ticks(np.arange(0, 1.6, 0.5))
+axs[1].set_ylim([-0.05, max_val])
+
+# 4%%
+long_err_collections = {}
+for model_run_name in model_run_names:
+    long_err_collections[model_run_name] = get_scenario_err('vel', model_run_name)
+for model_run_name in model_run_names:
+    scenario_err_arr = long_err_collections[model_run_name]
+    error_total = get_rwse(scenario_err_arr)
+    if model_run_name == 'cae_014':
+        axs[0].plot(time_steps, error_total, label=model_run_name, color='red')
+    elif model_run_name == 'mlp_001':
+        axs[0].plot(time_steps, error_total, label=model_run_name, color='black')
+    else:
+        axs[0].plot(time_steps, error_total, label=model_run_name)
+
+axs[0].legend(list(model_legend_map.values()), loc='upper left', edgecolor='black')
+
+lat_err_collections = {}
+for model_run_name in model_run_names:
+    lat_err_collections[model_run_name] = get_scenario_err('act_lat', model_run_name)
+
+for model_run_name in model_run_names:
+    scenario_err_arr = lat_err_collections[model_run_name]
+    error_total = get_rwse(scenario_err_arr)
+    if model_run_name == 'cae_014':
+        axs[1].plot(time_steps, error_total, label=model_run_name, color='red')
+    elif model_run_name == 'mlp_001':
+        axs[1].plot(time_steps, error_total, label=model_run_name, color='black')
+    else:
+        axs[1].plot(time_steps, error_total, label=model_run_name)
+
+
+# %%
 
 """ ####################################### compare CAE, MLP and LSTM #######################################"""
 
@@ -145,9 +213,6 @@ plt.savefig("rwse_models.png", dpi=500, bbox_inches='tight')
 # %%
 
 """ ####################################### compare step_sizes #######################################"""
-
-mc_run_name = ['all_density']
-
 mc_run_name = ['all_density']
 model_val_run_map = {
     'cae_001': mc_run_name,  # "pred_step_n": 20, "step_size": 1
@@ -215,7 +280,7 @@ for model_run_name in model_run_names:
 
 plt.savefig("rwse_step_size.png", dpi=500, bbox_inches='tight')
 # %%
-""" ####################################### compare step_sizes #######################################"""
+""" ####################################### compare seq length #######################################"""
 mc_run_name = ['all_density']
 model_val_run_map = {
     'cae_007': mc_run_name, # "pred_step_n": 1, "step_size": 3
