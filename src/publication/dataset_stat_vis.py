@@ -1,6 +1,8 @@
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
+import matplotlib.patches as patches
+
 
 m_col = ['episode_id', 'id', 'frm', 'vel', 'pc', 'lc_type', 'act_long_p',
                                             'act_lat_p', 'act_long', 'act_lat']
@@ -131,43 +133,11 @@ plt.savefig("lc_extraction_example.png", dpi=500, bbox_inches='tight')
 # %%
 """
 Visualising data distribution
+I needed this to show that our dataset is sufficiently diverse.
 """
-dxs = feature_set['ff_long'].values[0:10000]
-dxs.shape
-# %%
-fig = plt.figure()
-ax = fig.add_subplot()
-# ax = fig.add_subplot(projection='3d')
-ys, xs = np.histogram(dxs, bins=10, density=False)
-plt.hist(dxs, bins=3)
-xs.shape
-ys.shape
-ax.bar(xs, ys,)
-# _ = ax.bar3d(ys, xs, , bins=50)
-# %%
-np.random.seed(19680801)
+headway_arr = feature_set['ff_long'].values[0:10000]
+speed_arr = feature_set['vel'].values[0:10000]
 
-
-fig = plt.figure()
-ax = fig.add_subplot(projection='3d')
-x, y = np.random.rand(2, 100) * 4
-hist, xedges, yedges = np.histogram2d(x, y, bins=4, range=[[0, 4], [0, 4]])
-
-# Construct arrays for the anchor positions of the 16 bars.
-del_pos = 5.25
-xpos, ypos = np.meshgrid(xedges[:-1] + del_pos, yedges[:-1] + del_pos, indexing="ij")
-xpos = xpos.ravel()
-ypos = ypos.ravel()
-zpos = 0
-
-# Construct arrays with the dimensions for the 16 bars.
-dx = 0.5
-dy = 0.2
-dz = hist.ravel()
-
-ax.bar3d(xpos, ypos, zpos, dx, dy, dz, zsort='average')
-
-plt.show()
 # %%
 def set_up_ax(ax):
     ax.zaxis.axes._draw_grid = False
@@ -179,26 +149,106 @@ def set_up_ax(ax):
     init_view = view_2
     ax.view_init(*init_view)
     ax.set_yticks([])
+    ax.set_ylim([0., 2])
+    ax.tick_params(axis='both', which='major', pad=10)
     ax.w_xaxis.set_pane_color((.66, .66, .66, 0.6))
     ax.w_yaxis.set_pane_color((0, 0, 0, 0))
     ax.w_zaxis.set_pane_color((0, 0, 0, 0))
+    ax.view_init(25, -60)
+    ax.zaxis.set_rotate_label(False)
+    ax.set_zlabel('Histogram count', rotation=90, labelpad=20)
 
+def get_xz_poses(arr, bins):
+    zs, xs = np.histogram(arr, bins=bins)
+    dx = xs[1]-xs[0]
+    x_poses = xs[1:] - dx/2
+    return zs, xs, x_poses, dx
 
-fig = plt.figure(figsize=(20, 15))
-fig.subplots_adjust(left=None, bottom=None, right=None, top=None, wspace=0.1)
-ax_relative_x = fig.add_subplot(1, 2, 1, projection='3d')
+def sph2cart(r, theta, phi):
+    '''spherical to cartesian transformation.'''
+    x = r * np.sin(theta) * np.cos(phi)
+    y = r * np.sin(theta) * np.sin(phi)
+    z = r * np.cos(theta)
+    return x, y, z
+
+def sphview(ax):
+    '''returns the camera position for 3D axes in spherical coordinates'''
+    r = np.square(np.max([ax.get_xlim(), ax.get_ylim()], 1)).sum()
+    theta, phi = np.radians((90-ax.elev, ax.azim))
+    return r, theta, phi
+
+def ravzip(*itr):
+    '''flatten and zip arrays'''
+    return zip(*map(np.ravel, itr))
+
+def plot_bar(arr, ax, bins, orientation):
+    assert orientation == 'rear' or orientation == 'front'
+    zs, xs, x_poses, dx = get_xz_poses(arr, bins=bins)
+    dy = 0.3
+    front_rear_gap = 1
+
+    if orientation == 'front':
+        y_poses = np.zeros(x_poses.shape) + 0.2
+        color = 'mediumseagreen'
+
+    elif orientation == 'rear':
+        y_poses = np.zeros(x_poses.shape) + 0.2 + dy + front_rear_gap
+        color = 'lightblue'
+
+    xyz = np.array(sph2cart(*sphview(ax_speed)), ndmin=3).T       #camera position in xyz
+    zo = np.multiply([x_poses, y_poses, np.zeros_like(zs)], xyz).sum(0)  #"distance" of bars from camera
+    for i, (x,y,dz,o) in enumerate(ravzip(x_poses, y_poses, zs, zo)):
+        j, k = divmod(i, res)
+        pl = ax.bar3d(x, y, 0, dx, dy, dz, color=color)
+        pl._sort_zpos = o
+
+fig = plt.figure(figsize=(12, 6))
+fig.subplots_adjust(left=None, bottom=None, right=None, top=None, wspace=0.2)
+ax_headway = fig.add_subplot(1, 2, 1, projection='3d')
+ax_headway.set_xlabel('Headway distance (m)', rotation=0, labelpad=20)
+# ax_headway.set_zlim([0, 4000])
+set_up_ax(ax_headway)
+
 ax_speed = fig.add_subplot(1, 2, 2, projection='3d')
-x_poses = xs[1:] - (xs[1]-xs[0])/2
-dx = x_poses[0]*2
-dy = 0.5
-ax = ax_relative_x
+ax_speed.set_xlabel('Long. speed $\mathrm{(ms^{-1}}$)', rotation=0, labelpad=20)
+# ax_headway.set_zlim([0, 4000])
+set_up_ax(ax_speed)
+################################################ Headway
 
-ax.bar3d(x_poses, 0, zpos, dx, dy, ys, zsort='average')
-ax.bar3d(x_poses, 2, zpos, dx, dy, ys, zsort='average')
-set_up_ax(ax)
-ax.view_init(25, -60)
-ax.set_zlim([0, 4000])
-ax.zaxis.set_rotate_label(False)
-ax.set_xlabel('Vehicle headway', rotation=0, labelpad=20)
-ax.set_zlabel('Histogram count', rotation=90, labelpad=15)
-# plt.savefig("ngsim_state_distribution.png", dpi=500, bbox_inches='tight')
+################  US 101 in Los Angeles ################
+################  I-80 interstate in the San Francisco Bay ################
+################################################ Speed
+bins = 10
+plot_bar(speed_arr, ax_speed, bins, orientation='rear')
+plot_bar(speed_arr, ax_speed, bins, orientation='front')
+plot_bar(headway_arr, ax_headway, bins, orientation='rear')
+plot_bar(headway_arr, ax_headway, bins, orientation='front')
+################################################ Speed
+################  US 101 in Los Angeles ################
+################  I-80 interstate in the San Francisco Bay ################
+# ax_headway.legend(['fa', 'scsc'])
+
+
+patch_green = patches.Rectangle(
+        (0.1, 0.1),
+        0.5,
+        0.5,
+        color='mediumseagreen')
+
+patch_blue = patches.Rectangle(
+        (0.1, 0.1),
+        0.5,
+        0.5,
+        color='lightblue')
+
+custom_lines = [patch_green,
+                patch_blue]
+
+
+ax_headway.legend(custom_lines, ['US 101 in Los Angeles', 'I-80 interstate in the San Francisco Bay Area'],
+                  loc='lower center', bbox_to_anchor=(1, -0.3),
+                fancybox=False, shadow=False, edgecolor=None, ncol=2, frameon=False)
+
+################  I-80 interstate in the San Francisco, California #
+plt.savefig("ngsim_state_distribution.png", dpi=500, bbox_inches='tight')
+# %%
