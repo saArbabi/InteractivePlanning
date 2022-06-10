@@ -26,6 +26,9 @@ class Policy():
         data_configs_path = './src/datasets/preprocessed/'
         exp_dir = './src/models/experiments/'+config['model_name']
         exp_path = f'{exp_dir}/model_epo{epoch}'
+        print('################ models to be evaluated ##################')
+        print(exp_path)
+        print('##########################################################')
 
         with open('./src/datasets/'+'action_scaler', 'rb') as f:
             self.action_scaler = pickle.load(f)

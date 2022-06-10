@@ -7,13 +7,21 @@ import matplotlib.patches as patches
 m_col = ['episode_id', 'id', 'frm', 'vel', 'pc', 'lc_type', 'act_long_p',
                                             'act_lat_p', 'act_long', 'act_lat']
 
-
+o_col = ['episode_id', 'id', 'frm', 'exists', 'vel', 'dx', 'act_long_p',
+                                            'act_lat_p', 'act_long', 'act_lat']
 
 m_df_lk = pd.read_csv('./src/datasets/m_df_lk.txt', delimiter=' ',
                                                         header=None, names=m_col)
 
 m_df_lc = pd.read_csv('./src/datasets/m_df.txt', delimiter=' ',
                                                         header=None, names=m_col)
+y_df_lc = pd.read_csv('./src/datasets/y_df.txt', delimiter=' ',
+                                                        header=None, names=o_col)
+
+spec_col = ['episode_id', 'scenario', 'lc_frm', 'm_id', 'y_id', 'fadj_id', 'f_id',
+       'frm_n']
+spec = pd.read_csv('./src/datasets/episode_spec.txt', delimiter=' ',
+                                                        header=None, names=spec_col)
 
 
 # %%
@@ -25,6 +33,10 @@ MEDIUM_SIZE = 20
 plt.rc('font', size=MEDIUM_SIZE)          # controls default text sizes
 plt.rc('axes', labelsize=MEDIUM_SIZE)    # fontsize of the x and y labels
 # %%
+""" Plot xy trajectories of vehicles. Use this to showcase what we are try to
+learn to immitate.
+"""
+
 def get_trajs(df_epis, traj_len, starting_y=0):
     long_speed = df_epis['vel'].values
     lat_speed = df_epis['act_lat'].values
@@ -109,24 +121,32 @@ feature_set = pd.read_csv('./src/datasets/feature_set.txt', delimiter=' ',
                         header=None, names=col).drop(col_drop,axis=1)
 
 # %%
-# 2215 i80_2 5088.0 1543 1548.0 1538.0 1539.0 74
+# 76 i101_1 1519.0 525 526.0 518.0 522.0 66
 df_epis = feature_set.loc[
                     (feature_set['scenario'] == 'i101_1') &
                     (feature_set['id'] == 525) &
-                    (feature_set['frm'] >= 1460 - 10) &
-                    (feature_set['frm'] <= 1560)]
+                    (feature_set['frm'] >= 1519 - 80) &
+                    (feature_set['frm'] <= 1519 + 100)].reset_index(drop = True)
+
 
 # %%
 
 plt.figure(figsize=(10, 7))
-pos_xy = get_trajs(df_epis, df_epis.shape[0], -0.6)
-plt.plot([-1, 11], [0, 0], color='black', linestyle='--')
-plt.plot([-1, 11], [df_epis['pc'].max(), df_epis['pc'].max()], color='red', linestyle='--')
-plt.plot(np.arange(df_epis.shape[0])*0.1, pos_xy[:, 1], linewidth = line_width, color='blue')
+line_width = 3
+episode_time = np.arange(df_epis.shape[0])*0.1 # seconds
+pos_xy = get_trajs(df_epis, df_epis.shape[0], df_epis['pc'].min())
+plt.plot([-1, 25], [0, 0], color='black', linestyle='--')
+plt.plot([-1, 25], [df_epis['pc'].max(), df_epis['pc'].max()], color='red', linestyle='--')
+plt.plot(episode_time, pos_xy[:, 1], linewidth = line_width, color='blue')
 
+df_epis.where(df_epis['frm'] == 1519 + 66)
+completion_index = df_epis[df_epis['frm'] == 1519 + 66].index[0]
+completion_time = episode_time[completion_index]
+completion_y = pos_xy[completion_index, 1]
+plt.scatter(completion_time, completion_y, color='black', s=50)
 
-plt.ylim(-1.6, 4.5)
-plt.xlim(0, 11 )
+# plt.ylim(-2.3, 3.5)
+plt.xlim(0, 18)
 plt.xlabel('Time (s)')
 plt.ylabel('y (m)')
 plt.savefig("lc_extraction_example.png", dpi=500, bbox_inches='tight')
@@ -135,12 +155,30 @@ plt.savefig("lc_extraction_example.png", dpi=500, bbox_inches='tight')
 Visualising data distribution
 I needed this to show that our dataset is sufficiently diverse.
 """
-headway_arr = feature_set['ff_long'].values[0:10000]
-speed_arr = feature_set['vel'].values[0:10000]
+i101_episodes = spec.loc[
+    (spec['scenario'] == 'i101_1') | \
+    (spec['scenario'] == 'i101_2') | \
+    (spec['scenario'] == 'i101_3')]['episode_id'].values
+
+i80_episodes = spec.loc[
+    (spec['scenario'] == 'i80_1') | \
+    (spec['scenario'] == 'i80_2') | \
+    (spec['scenario'] == 'i80_3')]['episode_id'].values
+
+
+headway_i101_arr = y_df_lc[y_df_lc.episode_id.isin(i101_episodes)]['dx'].values
+headway_i101_arr[np.isnan(headway_i101_arr)] = 70
+headway_i101_arr[headway_i101_arr > 70] = 70
+headway_i80_arr = y_df_lc[y_df_lc.episode_id.isin(i80_episodes)]['dx'].values
+headway_i80_arr[np.isnan(headway_i80_arr)] = 70
+headway_i80_arr[headway_i80_arr > 70] = 70
+speed_i101_arr = m_df_lc[m_df_lc.episode_id.isin(i101_episodes)]['vel'].values
+speed_i80_arr = m_df_lc[m_df_lc.episode_id.isin(i80_episodes)]['vel'].values
 
 # %%
 def set_up_ax(ax):
     ax.zaxis.axes._draw_grid = False
+    tmp_planes = ax.zaxis._PLANES
     ax.zaxis._PLANES = ( tmp_planes[2], tmp_planes[3],
                          tmp_planes[0], tmp_planes[1],
                          tmp_planes[4], tmp_planes[5])
@@ -198,36 +236,27 @@ def plot_bar(arr, ax, bins, orientation):
     xyz = np.array(sph2cart(*sphview(ax_speed)), ndmin=3).T       #camera position in xyz
     zo = np.multiply([x_poses, y_poses, np.zeros_like(zs)], xyz).sum(0)  #"distance" of bars from camera
     for i, (x,y,dz,o) in enumerate(ravzip(x_poses, y_poses, zs, zo)):
-        j, k = divmod(i, res)
-        pl = ax.bar3d(x, y, 0, dx, dy, dz, color=color)
+        pl = ax.bar3d(x, y, 0, dx, dy, dz, color=color, edgecolor='black')
         pl._sort_zpos = o
 
 fig = plt.figure(figsize=(12, 6))
 fig.subplots_adjust(left=None, bottom=None, right=None, top=None, wspace=0.2)
 ax_headway = fig.add_subplot(1, 2, 1, projection='3d')
-ax_headway.set_xlabel('Headway distance (m)', rotation=0, labelpad=20)
-# ax_headway.set_zlim([0, 4000])
+ax_headway.set_xlabel('Headway distance $\mathrm{(m)}$', rotation=0, labelpad=20)
+ax_headway.set_xlim([0, 80])
+ax_headway.plot([70, 70], [0, 2], [1, 1], linewidth=3, color='red')
 set_up_ax(ax_headway)
 
 ax_speed = fig.add_subplot(1, 2, 2, projection='3d')
 ax_speed.set_xlabel('Long. speed $\mathrm{(ms^{-1}}$)', rotation=0, labelpad=20)
-# ax_headway.set_zlim([0, 4000])
 set_up_ax(ax_speed)
-################################################ Headway
 
-################  US 101 in Los Angeles ################
-################  I-80 interstate in the San Francisco Bay ################
-################################################ Speed
-bins = 10
-plot_bar(speed_arr, ax_speed, bins, orientation='rear')
-plot_bar(speed_arr, ax_speed, bins, orientation='front')
-plot_bar(headway_arr, ax_headway, bins, orientation='rear')
-plot_bar(headway_arr, ax_headway, bins, orientation='front')
-################################################ Speed
-################  US 101 in Los Angeles ################
-################  I-80 interstate in the San Francisco Bay ################
-# ax_headway.legend(['fa', 'scsc'])
+bins = 30
+plot_bar(speed_i80_arr, ax_speed, bins, orientation='rear')
+plot_bar(speed_i101_arr, ax_speed, bins, orientation='front')
 
+plot_bar(headway_i80_arr, ax_headway, bins, orientation='rear')
+plot_bar(headway_i101_arr, ax_headway, bins, orientation='front')
 
 patch_green = patches.Rectangle(
         (0.1, 0.1),
@@ -245,10 +274,11 @@ custom_lines = [patch_green,
                 patch_blue]
 
 
+# ax_headway.bar3d(70, -1, 0, 0.5, 3, 0.1, color='red')
+
 ax_headway.legend(custom_lines, ['US 101 in Los Angeles', 'I-80 interstate in the San Francisco Bay Area'],
                   loc='lower center', bbox_to_anchor=(1, -0.3),
                 fancybox=False, shadow=False, edgecolor=None, ncol=2, frameon=False)
 
-################  I-80 interstate in the San Francisco, California #
 plt.savefig("ngsim_state_distribution.png", dpi=500, bbox_inches='tight')
 # %%
