@@ -9,7 +9,7 @@ import pickle
 import numpy as np
 
 mc_run_name = ''# the log file name will be mc_run_name + traffic_density
-config_name = 'cae_016'
+config_name = 'test'
 # config_name = 'study_step_size'
 # config_name = 'study_seq_len'
 # config_name = 'cae_013'
@@ -38,6 +38,8 @@ def main():
     state_scaler, action_scaler = loadScalers() # will set the scaler attributes
 
     model_names = eval_config['model_map'].keys()
+
+
     for model_name in model_names:
         model_type, _, traffic_densities = eval_config['model_map'][model_name]
         if model_type == 'CAE':

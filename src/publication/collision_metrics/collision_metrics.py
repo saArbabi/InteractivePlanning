@@ -28,7 +28,7 @@ eval_obj.state_scaler, eval_obj.action_scaler = state_scaler, action_scaler
 # %%
 """Load policy
 """
-model_name = 'cae_003'
+model_name = 'cae_018'
 model_type = 'CAE'
 epoch = 50
 traj_n = 100
@@ -107,32 +107,41 @@ pred_collection70.min()
 # %%
 """ plot setup
 """
-plt.style.use('ieee')
-plt.rcParams["font.family"] = "Times New Roman"
-MEDIUM_SIZE = 7
+params = {
+          'font.family': "Times New Roman",
+          'legend.fontsize': 14,
+          'legend.handlelength': 2}
+plt.rcParams.update(params)
+MEDIUM_SIZE = 14
 plt.rc('font', size=MEDIUM_SIZE)          # controls default text sizes
 plt.rc('axes', labelsize=MEDIUM_SIZE)    # fontsize of the x and y labels
-# %%
 
 
-_ = plt.hist(pred_collection70.flatten(), bins=50, alpha=0.5, label='Agent')
-_ = plt.hist(true_collection70.flatten(), bins=50, alpha=0.5, label='Human')
+bins = 50
+_ = plt.hist(true_collection70.flatten(), bins=bins, label='Human', facecolor='red',
+             )
+_ = plt.hist(pred_collection70.flatten(), bins=bins, label='Agent', \
+             linewidth=2, edgecolor='green',fill=False, alpha=0.7)
+# _ = plt.hist(true_collection70.flatten(), bins=50, alpha=0.5, label='Human', 'fill')
 plt.plot([3.5, 3.5], [0, 1000], color='black', linestyle='--')
-# plt.plot([0.49, 0.49], [0, 1000], color='red', linestyle='-')
-# plt.plot([0.53, 0.53], [0, 1000], color='green', linestyle='-')
 
-plt.ylim(0,200)
+plt.ylim(0,230)
 plt.xlim(-3, 70)
 plt.xlabel('Vehicle distance (m)')
 plt.ylabel('Histogram count')
 
 plt.plot()
 plt.legend(loc='upper right', ncol=1, edgecolor='black')
-plt.savefig("plan_histogram.png", dpi=500, bbox_inches='tight')
-# %%
-# plt.savefig("plan_histogram.png", dpi=500)
+plt.savefig("plan_histogram.pdf", dpi=500, bbox_inches='tight')
 
 # %%
 plt.plot(pred_collection[0][0].flatten())
 plt.plot(true_collection[0][0].flatten())
 # %%
+def data_saver(data, data_name):
+    file_name = './src/publication/collision_metrics/' + data_name + '.pickle'
+    with open(file_name, 'wb') as handle:
+        pickle.dump(data, handle)
+
+data_saver(pred_collection, 'pred_collection')
+data_saver(true_collection, 'true_collection')

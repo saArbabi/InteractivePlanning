@@ -13,6 +13,7 @@ from publication.scene_evolution import helpers
 reload(helpers)
 from publication.scene_evolution.helpers import *
 
+from matplotlib.lines import Line2D
 
 data_obj = EvalDataObj()
 states_arr, targets_arr = data_obj.load_val_data()
@@ -36,7 +37,7 @@ indxs = StateIndxs()
 eval_obj.states_arr, eval_obj.targets_arr = states_arr, targets_arr
 eval_obj.state_scaler, eval_obj.action_scaler = state_scaler, action_scaler
 
-model_name = 'cae_003'
+model_name = 'cae_018'
 model_type = 'CAE'
 epoch = 50
 episode_id = 2215
@@ -103,54 +104,52 @@ for snap_i in range(snap_count):
 time_steps = np.linspace(0, 3.9, 40)
 ts_h = time_steps[:20]
 ts_f = time_steps[19:]
-subplot_xcount = 5
-subplot_ycount = 3
-fig, axs = plt.subplots(subplot_ycount, subplot_xcount, figsize=(18,11))
-fig.tight_layout()
-fig.subplots_adjust(left=None, bottom=None, right=None, top=None, wspace=0.2, hspace=0.3)
 
-axs[0, 0].set_ylabel('$\mathrm{\ddot x_e \; (ms^{-2})}$', labelpad=-2)
-axs[1, 0].set_ylabel('$\mathrm{\ddot x_e \; (ms^{-2})}$', labelpad=-2)
-axs[2, 0].set_ylabel('$\mathrm{\ddot x_e \; (ms^{-2})}$', labelpad=-2)
+#  %%
+params = {
+          'font.family': "Times New Roman",
+          'legend.fontsize': 20,
+          'legend.handlelength': 2}
+plt.rcParams.update(params)
+MEDIUM_SIZE = 18
+plt.rc('font', size=MEDIUM_SIZE)          # controls default text sizes
+plt.rc('axes', labelsize=MEDIUM_SIZE)    # fontsize of the x and y labels
 
-axs[0, 1].set_ylabel('$\mathrm{\dot y_e \; (ms^{-1})}$', labelpad=-2)
-axs[1, 1].set_ylabel('$\mathrm{\dot y_e \; (ms^{-1})}$', labelpad=-2)
-axs[2, 1].set_ylabel('$\mathrm{\dot y_e \; (ms^{-1})}$', labelpad=-2)
+fig_x = 22
+fig_y = 3
+fig_instant_1, axs_instant_1 = plt.subplots(1, 5, figsize=(fig_x, fig_y))
+fig_instant_2, axs_instant_2 = plt.subplots(1, 5, figsize=(fig_x, fig_y))
+fig_instant_3, axs_instant_3 = plt.subplots(1, 5, figsize=(fig_x, fig_y))
+figs = [fig_instant_1, fig_instant_2, fig_instant_3]
+axs = [axs_instant_1, axs_instant_2, axs_instant_3]
 
-axs[0, 2].set_ylabel('$\mathrm{\ddot x_{v_1} \; (ms^{-2})}$', labelpad=-2)
-axs[1, 2].set_ylabel('$\mathrm{\ddot x_{v_1} \; (ms^{-2})}$', labelpad=-2)
-axs[2, 2].set_ylabel('$\mathrm{\ddot x_{v_1} \; (ms^{-2})}$', labelpad=-2)
+for fig in figs:
+    fig.subplots_adjust(left=None, bottom=None, right=None, top=None, wspace=0.3, hspace=0.)
 
-axs[0, 3].set_ylabel('$\mathrm{\ddot x_{v_2} \; (ms^{-2})}$', labelpad=-2)
-axs[1, 3].set_ylabel('$\mathrm{\ddot x_{v_2} \; (ms^{-2})}$', labelpad=-2)
-axs[2, 3].set_ylabel('$\mathrm{\ddot x_{v_2} \; (ms^{-2})}$', labelpad=-2)
+for ax in axs:
+    ax[0].set_ylabel(r'$\mathdefault{\ddot x_e \; (m/s^2)}$', labelpad=-2)
+    ax[1].set_ylabel(r'$\mathdefault{\dot y_e \; (m/s)}$', labelpad=-2)
+    ax[2].set_ylabel(r'$\mathdefault{\ddot x_{v_1} \; (m/s^2)}$', labelpad=-2)
+    ax[3].set_ylabel(r'$\mathdefault{\ddot x_{v_2} \; (m/s^2)}$', labelpad=-2)
+    ax[4].set_ylabel(r'$\mathdefault{\ddot x_{v_3} \; (m/s^2)}$', labelpad=-2)
+    for ax_i in ax:
+        ax_i.set_xlabel('Time (s)')
+        ax_i.set_ylim([-2.1, 2.1])
+        ax_i.set_xlim([0, 4])
+        ax_i.set_yticks([-2, 0, 2])
+        ax_i.plot([1.9, 1.9], [-3, 3], color='blue')
 
-axs[0, 4].set_ylabel('$\mathrm{\ddot x_{v_3} \; (ms^{-2})}$', labelpad=-2)
-axs[1, 4].set_ylabel('$\mathrm{\ddot x_{v_3} \; (ms^{-2})}$', labelpad=-2)
-axs[2, 4].set_ylabel('$\mathrm{\ddot x_{v_3} \; (ms^{-2})}$', labelpad=-2)
-# axs[2, 4].set_ylabel('vdvdvd', labelpad=-2)
+custom_lines = [Line2D([0], [0], color='black', lw=4, linestyle='--'),
+                Line2D([0], [0], color='grey', lw=4),
+                Line2D([0], [0], color='red', lw=4, linestyle='--'),
+                Line2D([0], [0], color='green', lw=4),
+                ]
 
-for subplot_xi in range(subplot_xcount):
-    for subplot_yi in range(subplot_ycount):
-        axs[subplot_yi, subplot_xi].set_ylim([-2.1, 2.1])
-        axs[subplot_yi, subplot_xi].set_xlim([-0.2, 4])
-        axs[subplot_yi, subplot_xi].set_yticks([-2, 0, 2])
-        # axs[subplot_yi, subplot_xi].spines['top'].set_visible(False)
-        # axs[subplot_yi, subplot_xi].spines['right'].set_visible(False)
-        # axs[subplot_yi, subplot_xi].xaxis.set_tick_params(which="both", top=False)
-        # axs[subplot_yi, subplot_xi].yaxis.set_tick_params(which="both", right=False)
-        # axs[subplot_yi, subplot_xi].yaxis.set_tick_params(labelright='off')
-        # axs[subplot_yi, subplot_xi].xaxis.set_tick_params(which="both", top=False)
-        axs[subplot_yi, subplot_xi].set_xlabel('Time (s)')
-        # if subplot_yi < 2:
-            # axs[subplot_yi, subplot_xi].set_xticklabels([])
-            # axs[subplot_yi, subplot_xi].get_xaxis().set_visible(False)
-            # axs[subplot_yi, subplot_xi].spines['bottom'].set_visible(False)
-        # if subplot_yi == 2:
-
+fig_instant_1.legend(custom_lines, ['Action history', 'Anticipated human plans',\
+                              'True human plans', 'Agent chosen plan'],
+                  loc='upper center', bbox_to_anchor=(0.5, 1.15), edgecolor='black', ncol=4)
 
 
-# .%%
 for snap_i in range(snap_count):
     best_plan_indx = best_plan_indxs[snap_i] # index of chosen plan
 
@@ -160,71 +159,32 @@ for snap_i in range(snap_count):
         if veh_axis == 0:
             # ego car
             for act_axis in range(2):
-                plot_plan_space(ts_f, veh_pred_plans[:, :, act_axis], axs[snap_i, act_axis])
-                # for trace_i in range(traj_n):
-                #     if trace_i != best_plan_indx:
-                #         pred_plan = veh_pred_plans[trace_i, :, act_axis]
-                #         axs[snap_i, act_axis].plot(ts_f, pred_plan, color='grey', linewidth=0.9)
-
+                plot_plan_space(ts_f, veh_pred_plans[:, :, act_axis], axs[snap_i][act_axis])
                 true_plan = veh_true_plans[0, :, act_axis]
-                axs[snap_i, act_axis].plot(ts_f, true_plan[19:], color='red', linestyle='--', linewidth=2.5)
-                axs[snap_i, act_axis].plot(ts_h, true_plan[:20], color='black', linestyle='--', linewidth=2.5)
+                axs[snap_i][act_axis].plot(ts_f, true_plan[19:], color='red', linestyle='--', linewidth=2.5)
+                axs[snap_i][act_axis].plot(ts_h, true_plan[:20], color='black', linestyle='--', linewidth=2.5)
 
                 pred_plan = veh_pred_plans[best_plan_indx, :, act_axis]
-                axs[snap_i, act_axis].plot(ts_f, pred_plan, color='green', linewidth=2.5, label='Agent plan')
+                axs[snap_i][act_axis].plot(ts_f, pred_plan, color='green', linewidth=2.5, label='Agent plan')
         else:
             # only plot long.acc
             for trace_i in range(50):
 
                 pred_plan = veh_pred_plans[trace_i, :, 0]
                 if pred_plan.max() < 2:
-                    axs[snap_i, veh_axis+1].plot(ts_f, pred_plan, color='grey',
+                    axs[snap_i][veh_axis+1].plot(ts_f, pred_plan, color='grey',
                                                         linewidth=0.9, alpha=0.6, linestyle='-')
             true_plan = veh_true_plans[0, :, 0]
-            axs[snap_i, veh_axis+1].plot(ts_f, true_plan[19:], color='red', linestyle='--', linewidth=2.5)
-            axs[snap_i, veh_axis+1].plot(ts_h, true_plan[:20], color='black', linestyle='--', linewidth=2.5)
-
-plt.savefig("plans.svg", dpi=500)
+            axs[snap_i][veh_axis+1].plot(ts_f, true_plan[19:], color='red', linestyle='--', linewidth=2.5)
+            axs[snap_i][veh_axis+1].plot(ts_h, true_plan[:20], color='black', linestyle='--', linewidth=2.5)
 
 
-# %%
-"""
-#######################################  Scenario intro #######################################
-"""
-""" plot setup
-"""
-plt.style.use('ieee')
-plt.rcParams["font.family"] = "Times New Roman"
-MEDIUM_SIZE = 14
-plt.rc('font', size=MEDIUM_SIZE)          # controls default text sizes
-plt.rc('axes', labelsize=MEDIUM_SIZE)    # fontsize of the x and y labels
+for i, fig in enumerate(figs):
+    fig_name = 'plans_instant_'+str(i+1)+'.pdf'
+    fig.savefig(fig_name, dpi=500, bbox_inches='tight')
+#  %%
 
-# %%
-#
-# params = {
-#           'font.size' : 20,
-#           'font.family' : 'EB Garamond',
-#           }
-# plt.rcParams.update(params)
-# plt.style.use(['science','ieee'])
-# MEDIUM_SIZE = 14
-# LARGE_SIZE = 16
-#
-# plt.rc('font', size=MEDIUM_SIZE)          # controls default text sizes
-# plt.rc('axes', titlesize=LARGE_SIZE)     # fontsize of the axes title
-# plt.rc('axes', labelsize=LARGE_SIZE)    # fontsize of the x and y labels
-# plt.rc('xtick', labelsize=MEDIUM_SIZE)    # fontsize of the tick labels
-# plt.rc('ytick', labelsize=MEDIUM_SIZE)    # fontsize of the tick labels
-# plt.rc('legend', fontsize=MEDIUM_SIZE)    # legend fontsize
 
-from publication.scene_evolution import viewer
-reload(viewer)
-from publication.scene_evolution.viewer import Viewer
-
-plot_viewer = Viewer(env.trace_log)
-plot_viewer.set_up_traffic_intro_fig()
-plot_viewer.draw_speeds(state_arr[:, 2:])
-plt.savefig("speeds.svg", dpi=500, bbox_inches='tight')
 # %%
 """
 #######################################  Trajectory vis #######################################
@@ -240,9 +200,9 @@ reload(vehicles)
 from publication.scene_evolution import env
 reload(env)
 from publication.scene_evolution.env import Env
-model_name = 'cae_014'
+model_name = 'cae_018'
 model_type = 'CAE'
-epoch = 30
+epoch = 50
 policy = eval_obj.load_policy(model_name, model_type, epoch)
 env = Env(state_arr[:, 2:])
 env.caeveh.policy = policy
@@ -260,6 +220,16 @@ for state in ['glob_y', 'speed', 'act_long', 'act_lat', 'lane_y']:
     plt.title(state)
     plt.grid()
 # %%
+params = {
+          'font.family': "Times New Roman",
+          'legend.fontsize': 18,
+          'legend.handlelength': 2}
+plt.rcParams.update(params)
+MEDIUM_SIZE = 18
+plt.rc('font', size=MEDIUM_SIZE)          # controls default text sizes
+plt.rc('axes', labelsize=MEDIUM_SIZE)    # fontsize of the x and y labels
+
+
 from publication.scene_evolution import viewer
 reload(viewer)
 from publication.scene_evolution.viewer import Viewer
@@ -269,11 +239,26 @@ plot_viewer.set_up_traffic_fig()
 plot_viewer.set_up_profile_fig()
 plot_viewer.draw_plots()
 
+hspace = 0.3
+plot_viewer.traffic_fig.subplots_adjust(left=None, bottom=None, right=None, top=None, hspace=0.45)
+plot_viewer.state_profile_fig.subplots_adjust(left=None, bottom=None, right=None, top=None, hspace=0.45)
+
 plot_viewer.speed_ax.legend(['Human', 'Agent'],
-                      ncol=1, edgecolor='black')
+                      ncol=2, edgecolor='black', loc='upper right', facecolor='white')
 plot_viewer.scene_t1_ax.legend(['Human', 'Agent'],
-                      ncol=1, edgecolor='black')
+                      ncol=2, edgecolor='black', loc='upper right', facecolor='white')
 
-plot_viewer.traffic_fig.savefig("traffic_fig.svg", dpi=1000, bbox_inches='tight')
+# plot_viewer.traffic_fig.savefig("traffic_fig.svg", dpi=1000, bbox_inches='tight')
+# plot_viewer.state_profile_fig.savefig("state_profile_fig.pdf", dpi=1000, bbox_inches='tight')
+# %%
+"""
+#######################################  Scenario intro #######################################
+"""
+from publication.scene_evolution import viewer
+reload(viewer)
+from publication.scene_evolution.viewer import Viewer
 
-plot_viewer.state_profile_fig.savefig("state_profile_fig.svg", dpi=1000, bbox_inches='tight')
+plot_viewer = Viewer(env.trace_log)
+plot_viewer.set_up_traffic_intro_fig()
+plot_viewer.draw_speeds(state_arr[:, 2:])
+plt.savefig("speeds.pdf", dpi=500, bbox_inches='tight')

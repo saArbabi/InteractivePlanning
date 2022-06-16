@@ -34,3 +34,6 @@ def plot_plan_space(ts_f, veh_pred_plans, ax):
     plan_mean = veh_pred_plans[:, :].mean(axis=0)
     ax.fill_between(ts_f, plan_mean+plan_stdev, \
                     plan_mean-plan_stdev, color='orange', alpha=0.3)
+
+    ax.plot(ts_f, plan_mean+plan_stdev, color='orange')
+    ax.plot(ts_f, plan_mean-plan_stdev, color='orange')
