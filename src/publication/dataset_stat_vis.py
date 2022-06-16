@@ -29,7 +29,7 @@ spec = pd.read_csv('./src/datasets/episode_spec.txt', delimiter=' ',
 """
 # plt.style.use('ieee')
 plt.rcParams["font.family"] = "Times New Roman"
-MEDIUM_SIZE = 20
+MEDIUM_SIZE = 14
 plt.rc('font', size=MEDIUM_SIZE)          # controls default text sizes
 plt.rc('axes', labelsize=MEDIUM_SIZE)    # fontsize of the x and y labels
 # %%
@@ -51,7 +51,8 @@ def get_trajs(df_epis, traj_len, starting_y=0):
 
 
 
-plt.figure(figsize=(10, 7))
+# plt.figure(figsize=(10, 7))
+plt.figure()
 line_width = 1
 
 episodes = m_df_lk['episode_id'].unique()
@@ -97,7 +98,7 @@ plt.ylim(-5.5, 5.5)
 plt.xlim(-0.1, 180)
 plt.xlabel('x (m)')
 plt.ylabel('y (m)')
-plt.savefig("ngsim_trajs.png", dpi=500, bbox_inches='tight')
+plt.savefig("ngsim_trajs.pdf", dpi=500, bbox_inches='tight')
 
 # %%
 """
@@ -131,8 +132,9 @@ df_epis = feature_set.loc[
 
 # %%
 
-plt.figure(figsize=(10, 7))
-line_width = 3
+# plt.figure(figsize=(10, 7))
+plt.figure()
+line_width = 2
 episode_time = np.arange(df_epis.shape[0])*0.1 # seconds
 pos_xy = get_trajs(df_epis, df_epis.shape[0], df_epis['pc'].min())
 plt.plot([-1, 25], [0, 0], color='black', linestyle='--')
@@ -149,7 +151,7 @@ plt.scatter(completion_time, completion_y, color='black', s=50)
 plt.xlim(0, 18)
 plt.xlabel('Time (s)')
 plt.ylabel('y (m)')
-plt.savefig("lc_extraction_example.png", dpi=500, bbox_inches='tight')
+plt.savefig("lc_extraction_example.svg", dpi=500, bbox_inches='tight')
 # %%
 """
 Visualising data distribution
@@ -194,7 +196,7 @@ def set_up_ax(ax):
     ax.w_zaxis.set_pane_color((0, 0, 0, 0))
     ax.view_init(25, -60)
     ax.zaxis.set_rotate_label(False)
-    ax.set_zlabel('Histogram count', rotation=90, labelpad=20)
+    ax.set_zlabel('Histogram count', rotation=90, labelpad=25)
 
 def get_xz_poses(arr, bins):
     zs, xs = np.histogram(arr, bins=bins)
@@ -222,7 +224,7 @@ def ravzip(*itr):
 def plot_bar(arr, ax, bins, orientation):
     assert orientation == 'rear' or orientation == 'front'
     zs, xs, x_poses, dx = get_xz_poses(arr, bins=bins)
-    dy = 0.3
+    dy = 0.2
     front_rear_gap = 1
 
     if orientation == 'front':
@@ -236,19 +238,25 @@ def plot_bar(arr, ax, bins, orientation):
     xyz = np.array(sph2cart(*sphview(ax_speed)), ndmin=3).T       #camera position in xyz
     zo = np.multiply([x_poses, y_poses, np.zeros_like(zs)], xyz).sum(0)  #"distance" of bars from camera
     for i, (x,y,dz,o) in enumerate(ravzip(x_poses, y_poses, zs, zo)):
-        pl = ax.bar3d(x, y, 0, dx, dy, dz, color=color, edgecolor='black')
+        # pl = ax.bar3d(x, y, 0, dx, dy, dz, color=color, edgecolor='black', linewidth=0.1)
+        pl = ax.bar3d(x, y, 0, dx, dy, dz, color=color)
         pl._sort_zpos = o
 
-fig = plt.figure(figsize=(12, 6))
+plt.rcParams["font.family"] = "Times New Roman"
+MEDIUM_SIZE = 26
+plt.rc('font', size=MEDIUM_SIZE)          # controls default text sizes
+plt.rc('axes', labelsize=MEDIUM_SIZE)    # fontsize of the x and y labels
+fig = plt.figure(figsize=(13, 10))
+# fig = plt.figure()
 fig.subplots_adjust(left=None, bottom=None, right=None, top=None, wspace=0.2)
 ax_headway = fig.add_subplot(1, 2, 1, projection='3d')
-ax_headway.set_xlabel('Headway distance $\mathrm{(m)}$', rotation=0, labelpad=20)
+ax_headway.set_xlabel('Headway distance (m)', rotation=0, labelpad=30)
 ax_headway.set_xlim([0, 80])
 ax_headway.plot([70, 70], [0, 2], [1, 1], linewidth=3, color='red')
 set_up_ax(ax_headway)
 
 ax_speed = fig.add_subplot(1, 2, 2, projection='3d')
-ax_speed.set_xlabel('Long. speed $\mathrm{(ms^{-1}}$)', rotation=0, labelpad=20)
+ax_speed.set_xlabel('Long. speed (m/s)', rotation=0, labelpad=30)
 set_up_ax(ax_speed)
 
 bins = 30
@@ -277,8 +285,8 @@ custom_lines = [patch_green,
 # ax_headway.bar3d(70, -1, 0, 0.5, 3, 0.1, color='red')
 
 ax_headway.legend(custom_lines, ['US 101 in Los Angeles', 'I-80 interstate in the San Francisco Bay Area'],
-                  loc='lower center', bbox_to_anchor=(1, -0.3),
+                  loc='lower center', bbox_to_anchor=(1, -0.4),
                 fancybox=False, shadow=False, edgecolor=None, ncol=2, frameon=False)
 
-plt.savefig("ngsim_state_distribution.png", dpi=500, bbox_inches='tight')
+plt.savefig("ngsim_state_distribution.pdf", dpi=500, bbox_inches='tight')
 # %%
