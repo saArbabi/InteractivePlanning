@@ -6,66 +6,7 @@ from src.planner.state_indexs import StateIndxs
 indxs = StateIndxs()
 
 np.set_printoptions(suppress=True)
-# %%
-""" effect of guided learning """
-mc_run_name = ['all_density']
 
-model_val_run_map = {
-    # 'cae_003': mc_run_name, #
-    # 'cae_010': mc_run_name, # "allowed_error": 0.1
-    'cae_011': mc_run_name, # "allowed_error": 0.2
-    # 'cae_012': mc_run_name, # "allowed_error": 0.3
-    'cae_014': mc_run_name, # "allowed_error": 0.4
-    }
-# %%
-""" effect of using different architectures """
-mc_run_name = ['all_density']
-
-model_val_run_map = {
-    # 'cae_003': mc_run_name, #
-    # 'cae_008': mc_run_name, #
-    'cae_009': mc_run_name, # single decoder
-    }
-
-# %%
-""" compare CAE, MLP and LSTM """
-mc_run_name = ['all_density']
-
-model_val_run_map = {
-    'cae_003': mc_run_name, #
-    'mlp_001': mc_run_name, #
-    'lstm_001': mc_run_name, #
-    }
-
-# %%
-""" No response dynamics considered """
-mc_run_name = ['all_density']
-
-model_val_run_map = {
-    'cae_013': mc_run_name, #
-    }
-# %%
-
-true_collections = {}
-pred_collections = {}
-for model_name in list(model_val_run_map.keys()):
-    mc_run_names = model_val_run_map[model_name]
-    for mc_run_name in mc_run_names:
-        model_run_name = model_name+'_'+mc_run_name
-        exp_dir = './src/models/experiments/'+model_name+'/' + mc_run_name
-
-        with open(exp_dir+'/true_collections.pickle', 'rb') as handle:
-            true_collections[model_run_name] = np.array(pickle.load(handle))
-
-        with open(exp_dir+'/pred_collections.pickle', 'rb') as handle:
-            pred_collections[model_run_name] = np.array(pickle.load(handle))
-
-true_collections[model_run_name].shape
-pred_collections[model_run_name].shape
-model_run_names = list(true_collections.keys())
-model_run_names
-
-# %%
 def get_trace_err(pred_traces, true_trace):
     """
     Input shpae [n, steps_n]
@@ -98,6 +39,65 @@ def get_scenario_err(veh_axis, state_axis, model_run_name):
 def get_rwse(scenario_err_arr):
     # mean across all snippets (axis=0)
     return np.mean(scenario_err_arr, axis=0)**0.5
+
+# %%
+""" effect of guided learning """
+mc_run_name = ['all_density']
+
+model_val_run_map = {
+    # 'cae_003': mc_run_name, #
+    # 'cae_010': mc_run_name, # "allowed_error": 0.1
+    'cae_023': mc_run_name, # "allowed_error": 0.2
+    # 'cae_012': mc_run_name, # "allowed_error": 0.3
+    'cae_024': mc_run_name, # "allowed_error": 0.4
+    }
+# %%
+""" effect of using different architectures """
+mc_run_name = ['all_density']
+
+model_val_run_map = {
+    # 'cae_003': mc_run_name, #
+    # 'cae_008': mc_run_name, #
+    'cae_026': mc_run_name, # single decoder
+    }
+
+# %%
+""" compare CAE, MLP and LSTM """
+mc_run_name = ['all_density']
+
+model_val_run_map = {
+    'cae_018': mc_run_name, #
+    'mlp_002': mc_run_name, #
+    'lstm_002': mc_run_name, #
+    }
+
+# %%
+""" No response dynamics considered """
+mc_run_name = ['all_density']
+
+model_val_run_map = {
+    'cae_025': mc_run_name, #
+    }
+# %%
+
+true_collections = {}
+pred_collections = {}
+for model_name in list(model_val_run_map.keys()):
+    mc_run_names = model_val_run_map[model_name]
+    for mc_run_name in mc_run_names:
+        model_run_name = model_name+'_'+mc_run_name
+        exp_dir = './src/models/experiments/'+model_name+'/' + mc_run_name
+
+        with open(exp_dir+'/true_collections.pickle', 'rb') as handle:
+            true_collections[model_run_name] = np.array(pickle.load(handle))
+
+        with open(exp_dir+'/pred_collections.pickle', 'rb') as handle:
+            pred_collections[model_run_name] = np.array(pickle.load(handle))
+
+true_collections[model_run_name].shape
+pred_collections[model_run_name].shape
+model_run_names = list(true_collections.keys())
+model_run_names
 
 # %%
 time_steps = np.linspace(0, 2., 21)

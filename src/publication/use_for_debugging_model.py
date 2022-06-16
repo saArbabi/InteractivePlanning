@@ -40,9 +40,8 @@ model_val_run_map = {
 mc_run_name = ['all_density']
 
 model_val_run_map = {
-    'cae_003': mc_run_name, #
-    # 'cae_014': mc_run_name, #
-    'cae_010': mc_run_name, #
+    'cae_016': mc_run_name, #
+    'cae_003': mc_run_name #
     }
 # %%
 true_collections = {}
@@ -67,7 +66,7 @@ model_run_names
 """
 Visualisation of model predictions. Use this for debugging.
 """
-model_run_name = 'cae_010_all_density'
+model_run_name = 'cae_003_all_density'
 # model_run_name = 'cae_003_all_density'
 true_collection = true_collections[model_run_name]
 pred_collection = pred_collections[model_run_name]
@@ -78,7 +77,7 @@ time_steps = np.linspace(0, 3.9, 40)
 veh_names = ['veh_m', 'veh_y', 'veh_f', 'veh_fadj']
 
 # scene_samples = range(3)
-scene_samples = [100, 150, 200, 250]
+scene_samples = [5, 10, 15]
 for scene_sample in scene_samples:
     fig, axs = plt.subplots(figsize=(10, 1))
     start_time = true_collection[scene_sample, 0, 0, 1]
@@ -160,7 +159,8 @@ for model_run_name in model_run_names:
     long_speed.plot(time_steps, error_total, label=model_run_name)
 # model_run_names = ['h_lat_f_idm_act', 'h_lat_f_act', 'h_lat_act']
     print(error_total.max())
-# legends = ['NIDM', 'Latent-Seq', 'Latent-Single', 'Latent-Single-o']
+legends = ['cae_016', 'cae_013']
+long_speed.legend(legends)
 long_speed.set_ylabel('RWSE Long.speed ($ms^{-1}$)', labelpad=10)
 # long_speed.set_xlabel('Time horizon (s)')
 long_speed.minorticks_off()

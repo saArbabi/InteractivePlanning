@@ -29,7 +29,7 @@ config = {
 "data_config": {"obs_n": 20,
                 "pred_step_n": 1,
                 "step_size": 1,
-                "Note": ""
+                "Note": "lc and lk episodes."
 },
 "model_name": "NA",
 "Note": ""
@@ -44,7 +44,7 @@ train_input, test_input = data_objs[0:3], data_objs[3:]
 # train_input[0][7].shape
 # train_input[0][7][0, -1, :]
 # train_input[2][7][0][0, 0, :]
-train_input[0][1][0, 0, :].shape
+train_input[0][1][:, 0, :].shape
 # train_input[1][7][0][0, 0, :]
 
 # %%
@@ -129,17 +129,18 @@ class Trainer():
 
 
 tf.random.set_seed(2021)
-model_name = 'lstm_'+'001'
+model_name = 'lstm_'+'002'
 model_type = 'lstm'
+# model_name = 'mlp_'+'002'
+# model_type = 'mlp'
 model_trainer = Trainer(model_type)
 model_trainer.exp_dir = './src/models/experiments/'+model_name
 config['model_name'] = model_name
 # model_trainer.train(train_input, test_input, epochs=1)
 # model_trainer.load_pre_trained(epoch_count='20')
-model_trainer.train(_train_input, _test_input, epochs=1)
+# model_trainer.train(_train_input, _test_input, epochs=1)
 
 # %%
-
 if model_trainer.model_type == 'mlp':
     _train_input = [train_input[0][1][:,-1,:], train_input[1][1][0][:,0,:]]
     _test_input = [test_input[0][1][:,-1,:], test_input[1][1][0][:,0,:]]
@@ -147,7 +148,6 @@ if model_trainer.model_type == 'mlp':
 if model_trainer.model_type == 'lstm':
     _train_input = [train_input[0][1], train_input[1][1][0][:,0,:]]
     _test_input = [test_input[0][1], test_input[1][1][0][:,0,:]]
-
 
 # %%
 ################## Train ##################

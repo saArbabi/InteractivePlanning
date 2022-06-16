@@ -1,5 +1,5 @@
 """
-Use this module for evaluating step-wise LSTM and MLP-based models. 
+Use this module for evaluating step-wise LSTM and MLP-based models.
 """
 import sys
 sys.path.insert(0, './src')
@@ -82,6 +82,8 @@ class MCEVALSingleStep(MCEVALMultiStep):
             for step in range(self.pred_h):
                 gmm_m = self.policy(self.scale_state(pred_trace[:, step, :]))
                 act_m = self.inverse_transform_actions(gmm_m.sample().numpy())
+                act_m = np.clip(act_m, -10, 10)
+                assert not np.isnan(act_m).any(), 'There is a nan in sampled actions!'
                 self.fs.step(pred_trace[:, step, :], pred_trace[:, step+1, :], act_m)
 
         elif self.model_type == 'LSTM':
@@ -92,6 +94,8 @@ class MCEVALSingleStep(MCEVALMultiStep):
             for step in range(self.pred_h):
                 gmm_m = self.policy(state_history)
                 act_m = self.inverse_transform_actions(gmm_m.sample().numpy())
+                act_m = np.clip(act_m, -10, 10)
+                assert not np.isnan(act_m).any(), 'There is a nan in sampled actions!'
                 self.fs.step(pred_trace[:, step, :], pred_trace[:, step+1, :], act_m)
                 state_history[:, :-1, :] = state_history[:, 1:, :]
                 state_history[:, -1, :] = self.scale_state(pred_trace[:, step+1, :])

@@ -227,7 +227,11 @@ class MCEVALMultiStep():
             from planner.action_policy import Policy
             policy = Policy()
             policy.load_model(model_config, epoch)
-            # policy.traj_n = self.traces_n
+            try:
+                policy.traj_n = self.traces_n
+            except:
+                pass
+
 
         if model_type == 'MLP':
             exp_dir = './src/models/experiments/'+model_name
