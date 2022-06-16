@@ -32,16 +32,16 @@ config = {
 "data_config": {"obs_n": 20,
                 "pred_step_n": 7,
                 "step_size": 3,
-                "Note": "kc and lk episodes."
+                "Note": "lc and lk episodes."
 },
 "model_name": "NA",
-"Note": "No GL."
+"Note": ""
 }
+
+
 data_objs = DataObj(config).loadData()
 train_input, test_input = data_objs[0:3], data_objs[3:]
-train_input[0][7].shape
 # plt.hist(train_input[0][2][:, 0, -4])
-train_input[0][7].shape
 # train_input[0][7][0, -1, :]
 # train_input[2][7][0][0, 0, :]
 # train_input[1][7][0][0, 0, :]
@@ -91,6 +91,7 @@ class Trainer():
 
     def train(self, train_input, test_input, epochs):
         for epoch in range(epochs):
+
             t0 = time.time()
 
             self.epoch_count += 1
@@ -119,6 +120,7 @@ class Trainer():
 
             print(self.epoch_count, 'epochs completed')
             print(t1-t0,'s to complete epoch')
+        self.save_model()
 
     def save_model(self):
         if not os.path.exists(self.exp_dir):
@@ -141,11 +143,11 @@ class Trainer():
 
 tf.random.set_seed(2021)
 model_trainer = Trainer()
-model_trainer.model_name = 'cae_'+'016'
+model_trainer.model_name = 'cae_'+'018'
 model_trainer.exp_dir = './src/models/experiments/'+model_trainer.model_name
 config
 # model_trainer.train(train_input, test_input, epochs=1)
-# model_trainer.load_pre_trained(epoch_count='50')
+model_trainer.load_pre_trained(epoch_count='50')
 # %%
 ################## Train ##################
 ################## ##### ##################
@@ -162,6 +164,7 @@ model_trainer.train(train_input, test_input, epochs=30)
 Plot losses
 """
 epochs = range(1, model_trainer.epoch_count+1)
+
 for tr, te in zip(model_trainer.train_losses.keys(), model_trainer.test_losses.keys()):
     plt.figure()
     plt.plot(epochs, model_trainer.train_losses[tr], color='red', label=tr)
@@ -170,6 +173,37 @@ for tr, te in zip(model_trainer.train_losses.keys(), model_trainer.test_losses.k
     plt.scatter(epochs, model_trainer.test_losses[te], color='blue')
     plt.grid()
     plt.legend()
+# %%
+fig, axs = plt.subplots(2, 2, figsize=(10, 8))
+fig.subplots_adjust(left=None, bottom=None, right=None, top=None, wspace=0.3, hspace=0.4)
+
+for ax in axs.flatten():
+    ax.set_ylabel('Log loss')
+    ax.set_xlabel('Training epoch')
+    ax.grid()
+
+axs[0, 0].plot(model_trainer.train_losses['train_llloss_m'], '-o', color='red', label='Train loss')
+axs[0, 0].plot(model_trainer.test_losses['test_llloss_m'], '-o', color='blue', label='Validation loss')
+axs[0, 0].legend()
+axs[0, 0].set_title('Vehicle $e$ loss')
+
+axs[0, 1].plot(model_trainer.train_losses['train_llloss_y'], '-o', color='red', label='Train loss')
+axs[0, 1].plot(model_trainer.test_losses['test_llloss_y'], '-o', color='blue', label='Validation loss')
+axs[0, 1].legend()
+axs[0, 1].set_title('Vehicle $v_1$ loss')
+
+axs[1, 0].plot(model_trainer.train_losses['train_llloss_f'], '-o', color='red', label='Train loss')
+axs[1, 0].plot(model_trainer.test_losses['test_llloss_f'], '-o', color='blue', label='Validation loss')
+axs[1, 0].legend()
+axs[1, 0].set_title('Vehicle $v_2$ loss')
+
+axs[1, 1].plot(model_trainer.train_losses['train_llloss_fadj'], '-o', color='red', label='Train loss')
+axs[1, 1].plot(model_trainer.test_losses['test_llloss_fadj'], '-o', color='blue', label='Validation loss')
+axs[1, 1].legend()
+axs[1, 1].set_title('Vehicle $v_3$ loss')
+fig.savefig('losses.pdf', dpi=500, bbox_inches='tight')
+
+
 
 # %%
 model_trainer.save_model()
