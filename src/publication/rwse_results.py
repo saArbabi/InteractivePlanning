@@ -208,16 +208,16 @@ plt.savefig("rwse_step_size.pdf", dpi=500, bbox_inches='tight')
 """ ####################################### compare seq length #######################################"""
 mc_run_name = ['all_density']
 model_val_run_map = {
-    'cae_020': mc_run_name, # "pred_step_n": 1, "step_size": 3
-    'cae_021': mc_run_name,  # "pred_step_n": 3, "step_size": 3
-    'cae_022': mc_run_name, # "pred_step_n": 5, "step_size": 3
-    'cae_018': mc_run_name # "pred_step_n": 7, "step_size": 3
+    'cae_028': mc_run_name, # "pred_step_n": 5, "step_size": 1
+    'cae_027': mc_run_name, # "pred_step_n": 10, "step_size": 1
+    'cae_029': mc_run_name, # "pred_step_n": 15, "step_size": 1
+    'cae_016': mc_run_name # "pred_step_n": 20, "step_size": 1
     }
 model_legend_map = {
-    'cae_020': '$N=1$',
-    'cae_021': '$N=3$',
-    'cae_022': '$N=5$',
-    'cae_018': '$N=7$'}
+    'cae_028': '$N=5$',
+    'cae_027': '$N=10$',
+    'cae_029': '$N=15$',
+    'cae_016': '$N=20$'}
 
 true_collections, pred_collections = get_data_log_collections(model_val_run_map)
 model_run_names = list(true_collections.keys())
@@ -237,10 +237,10 @@ axs[1].set_ylabel(r'$\mathdefault{RWSE_y}$ (m)')
 
 # 4%%
 fig_specs = {
-    'cae_020': ['blue', ':'],
-    'cae_021': ['green', '-.'],
-    'cae_022': ['orange', '--'],
-    'cae_018': ['red', '-']}
+    'cae_028': ['blue', ':'],
+    'cae_027': ['green', '-.'],
+    'cae_029': ['orange', '--'],
+    'cae_016': ['red', '-']}
 
 long_err_collections = {}
 for model_run_name in model_run_names:

@@ -145,8 +145,8 @@ custom_lines = [Line2D([0], [0], color='black', lw=4, linestyle='--'),
                 Line2D([0], [0], color='green', lw=4),
                 ]
 
-fig_instant_1.legend(custom_lines, ['Action history', 'Anticipated human plans',\
-                              'True human plans', 'Agent chosen plan'],
+fig_instant_1.legend(custom_lines, ['Action history', 'Anticipated human plan',\
+                              'True human plan', 'Agent chosen plan'],
                   loc='upper center', bbox_to_anchor=(0.5, 1.15), edgecolor='black', ncol=4)
 
 
@@ -177,8 +177,6 @@ for snap_i in range(snap_count):
             true_plan = veh_true_plans[0, :, 0]
             axs[snap_i][veh_axis+1].plot(ts_f, true_plan[19:], color='red', linestyle='--', linewidth=2.5)
             axs[snap_i][veh_axis+1].plot(ts_h, true_plan[:20], color='black', linestyle='--', linewidth=2.5)
-
-plt.savefig("plans.svg", dpi=500)
 
 for i, fig in enumerate(figs):
     fig_name = 'plans_instant_'+str(i+1)+'.pdf'
