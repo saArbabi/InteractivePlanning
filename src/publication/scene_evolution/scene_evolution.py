@@ -111,7 +111,7 @@ params = {
           'legend.fontsize': 20,
           'legend.handlelength': 2}
 plt.rcParams.update(params)
-MEDIUM_SIZE = 18
+MEDIUM_SIZE = 20
 plt.rc('font', size=MEDIUM_SIZE)          # controls default text sizes
 plt.rc('axes', labelsize=MEDIUM_SIZE)    # fontsize of the x and y labels
 
@@ -127,11 +127,11 @@ for fig in figs:
     fig.subplots_adjust(left=None, bottom=None, right=None, top=None, wspace=0.3, hspace=0.)
 
 for ax in axs:
-    ax[0].set_ylabel(r'$\mathdefault{\ddot x_e \; (m/s^2)}$', labelpad=-2)
-    ax[1].set_ylabel(r'$\mathdefault{\dot y_e \; (m/s)}$', labelpad=-2)
-    ax[2].set_ylabel(r'$\mathdefault{\ddot x_{v_1} \; (m/s^2)}$', labelpad=-2)
-    ax[3].set_ylabel(r'$\mathdefault{\ddot x_{v_2} \; (m/s^2)}$', labelpad=-2)
-    ax[4].set_ylabel(r'$\mathdefault{\ddot x_{v_3} \; (m/s^2)}$', labelpad=-2)
+    ax[0].set_ylabel(r'$\mathdefault{\ddot x_e \; (m/s^2)}$', labelpad=-10)
+    ax[1].set_ylabel(r'$\mathdefault{\dot y_e \; (m/s)}$', labelpad=-10)
+    ax[2].set_ylabel(r'$\mathdefault{\ddot x_{v_1} \; (m/s^2)}$', labelpad=-10)
+    ax[3].set_ylabel(r'$\mathdefault{\ddot x_{v_2} \; (m/s^2)}$', labelpad=-10)
+    ax[4].set_ylabel(r'$\mathdefault{\ddot x_{v_3} \; (m/s^2)}$', labelpad=-10)
     for ax_i in ax:
         ax_i.set_xlabel('Time (s)')
         ax_i.set_ylim([-2.1, 2.1])
